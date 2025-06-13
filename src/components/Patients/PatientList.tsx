@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Eye, Trash2, Phone, Mail } from 'lucide-react';
-import { mockPatients } from '../../data/mockData';
 import { Patient } from '../../types';
 
 interface PatientListProps {
@@ -9,14 +8,17 @@ interface PatientListProps {
 }
 
 const PatientList: React.FC<PatientListProps> = ({ onAddPatient, onEditPatient }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [patients] = useState<Patient[]>(mockPatients);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredPatients = patients.filter(patient =>
-    `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.phone.includes(searchTerm)
-  );
+  useEffect(() => {
+    // TODO: Fetch patients from backend API
+    setPatients([]);
+    setLoading(false);
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (patients.length === 0) return <div>No patients found.</div>;
 
   const calculateAge = (dateOfBirth: string) => {
     const today = new Date();
@@ -51,8 +53,6 @@ const PatientList: React.FC<PatientListProps> = ({ onAddPatient, onEditPatient }
             <input
               type="text"
               placeholder="Search patients by name, email, or phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
             />
           </div>
@@ -86,7 +86,7 @@ const PatientList: React.FC<PatientListProps> = ({ onAddPatient, onEditPatient }
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredPatients.map((patient) => (
+              {patients.map((patient) => (
                 <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -139,13 +139,6 @@ const PatientList: React.FC<PatientListProps> = ({ onAddPatient, onEditPatient }
           </table>
         </div>
       </div>
-
-      {filteredPatients.length === 0 && (
-        <div className="text-center py-12">
-          <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500">No patients found matching your search criteria.</p>
-        </div>
-      )}
     </div>
   );
 };

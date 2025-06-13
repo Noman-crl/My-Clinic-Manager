@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Receipt, Search, Plus, DollarSign, Calendar, User, Filter, Eye, Download } from 'lucide-react';
-import { mockInvoices, mockPatients } from '../../data/mockData';
 
 export default function BillingList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [invoices] = useState(mockInvoices);
+  // TODO: Fetch invoices from API
+  const invoices: any[] = [];
+
+  if (invoices.length === 0) return <div>No invoices found.</div>;
 
   const filteredInvoices = invoices.filter(invoice => {
     const patient = mockPatients.find(p => p.id === invoice.patientId);
