@@ -19,18 +19,8 @@ const columns: GridColDef[] = [
   { field: 'status', headerName: 'Status', width: 120 },
 ];
 
-const mockDoctors = [
-  {
-    id: 1,
-    name: 'Dr. Sarah Smith',
-    email: 'sarah@example.com',
-    phone: '123-456-7890',
-    specialization: 'Cardiology',
-    experience: 10,
-    status: 'Active',
-  },
-  // Add more mock data as needed
-];
+// TODO: Fetch doctors from API
+const doctors: any[] = [];
 
 const DoctorList: React.FC = () => {
   const navigate = useNavigate();
@@ -49,7 +39,7 @@ const DoctorList: React.FC = () => {
       </Box>
       <Paper sx={{ height: 600, width: '100%' }}>
         <DataGrid
-          rows={mockDoctors}
+          rows={doctors}
           columns={columns}
           pageSize={10}
           rowsPerPageOptions={[10]}

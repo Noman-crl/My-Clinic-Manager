@@ -16,13 +16,21 @@ import { useClinicStore } from './store';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import Home from './pages/Home';
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
   if (loading) return <div>Loading...</div>;
   if (!user) return <Navigate to="/signin" replace />;
   return children;
-};
+}
+
+function PublicHome() {
+  const { user, loading } = useAuth();
+  if (loading) return <div>Loading...</div>;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return <Home />;
+}
 
 const App: React.FC = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -208,24 +216,18 @@ const App: React.FC = () => {
     <AuthProvider>
       <Router>
         <Routes>
+          <Route path="/" element={<PublicHome />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route
-            path="/"
+            path="/dashboard"
             element={
               <ProtectedRoute>
-                <div className="flex h-screen bg-gray-50">
-                  <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-                  <div className="flex-1 flex flex-col ml-64">
-                    <Header />
-                    <main className="flex-1 overflow-y-auto pt-16 p-6">
-                      {renderContent()}
-                    </main>
-                  </div>
-                </div>
+                <Dashboard />
               </ProtectedRoute>
             }
           />
+          {/* Add more protected routes as needed */}
         </Routes>
       </Router>
     </AuthProvider>

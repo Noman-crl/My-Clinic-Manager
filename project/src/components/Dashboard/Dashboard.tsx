@@ -7,22 +7,23 @@ import {
 } from '@mui/icons-material';
 
 const Dashboard: React.FC = () => {
+  // TODO: Fetch stats from API
   const stats = [
     {
       title: 'Total Patients',
-      value: '1,234',
+      value: 0,
       icon: <PeopleIcon sx={{ fontSize: 40 }} />,
       color: '#1976d2',
     },
     {
       title: 'Total Doctors',
-      value: '45',
+      value: 0,
       icon: <DoctorIcon sx={{ fontSize: 40 }} />,
       color: '#2e7d32',
     },
     {
       title: 'Today\'s Appointments',
-      value: '28',
+      value: 0,
       icon: <AppointmentIcon sx={{ fontSize: 40 }} />,
       color: '#ed6c02',
     },

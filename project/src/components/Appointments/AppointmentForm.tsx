@@ -24,15 +24,9 @@ const validationSchema = yup.object({
   notes: yup.string(),
 });
 
-const mockPatients = [
-  { id: 1, name: 'John Doe' },
-  { id: 2, name: 'Jane Smith' },
-];
-
-const mockDoctors = [
-  { id: 1, name: 'Dr. Sarah Smith' },
-  { id: 2, name: 'Dr. Michael Johnson' },
-];
+// TODO: Fetch patients and doctors from API
+const patients: any[] = [];
+const doctors: any[] = [];
 
 const AppointmentForm: React.FC = () => {
   const navigate = useNavigate();
@@ -76,7 +70,7 @@ const AppointmentForm: React.FC = () => {
                 error={formik.touched.patientId && Boolean(formik.errors.patientId)}
                 helperText={formik.touched.patientId && formik.errors.patientId}
               >
-                {mockPatients.map((patient) => (
+                {patients.map((patient) => (
                   <MenuItem key={patient.id} value={patient.id}>
                     {patient.name}
                   </MenuItem>
@@ -95,7 +89,7 @@ const AppointmentForm: React.FC = () => {
                 error={formik.touched.doctorId && Boolean(formik.errors.doctorId)}
                 helperText={formik.touched.doctorId && formik.errors.doctorId}
               >
-                {mockDoctors.map((doctor) => (
+                {doctors.map((doctor) => (
                   <MenuItem key={doctor.id} value={doctor.id}>
                     {doctor.name}
                   </MenuItem>

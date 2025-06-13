@@ -13,7 +13,10 @@ app.use(express.json());
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-}).then(() => console.log('MongoDB connected')).catch(err => console.error('MongoDB error:', err));
+}).then(async () => {
+  console.log('MongoDB connected');
+  await ensureAdminUser();
+}).catch(err => console.error('MongoDB error:', err));
 
 // User model
 const userSchema = new mongoose.Schema({
@@ -64,6 +67,19 @@ app.get('/api/auth/me', auth, async (req, res) => {
   const user = await User.findById(req.user.id).select('-password');
   res.json(user);
 });
+
+// Ensure default admin user exists
+async function ensureAdminUser() {
+  const adminEmail = 'admin@admin.com';
+  const adminName = 'Admin';
+  const adminPassword = 'Admin';
+  let admin = await User.findOne({ email: adminEmail });
+  if (!admin) {
+    const hash = await bcrypt.hash(adminPassword, 10);
+    admin = await User.create({ name: adminName, email: adminEmail, password: hash });
+    console.log('Default admin user created:', adminEmail);
+  }
+}
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Auth server running on port ${PORT}`)); 
