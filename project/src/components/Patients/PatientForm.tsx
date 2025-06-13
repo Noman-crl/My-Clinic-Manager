@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
@@ -10,7 +10,10 @@ import {
   Paper,
   Grid,
   MenuItem,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
+import { getPatient, createPatient, updatePatient } from '../../services/api';
 
 const validationSchema = yup.object({
   name: yup.string().required('Name is required'),
@@ -25,6 +28,8 @@ const PatientForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const formik = useFormik({
     initialValues: {
@@ -36,12 +41,51 @@ const PatientForm: React.FC = () => {
       address: '',
     },
     validationSchema: validationSchema,
-    onSubmit: (values) => {
-      console.log(values);
-      // Handle form submission
-      navigate('/patients');
+    onSubmit: async (values) => {
+      try {
+        setLoading(true);
+        setError('');
+        if (isEdit && id) {
+          await updatePatient(id, values);
+        } else {
+          await createPatient(values);
+        }
+        navigate('/patients');
+      } catch (err) {
+        setError('Failed to save patient. Please try again later.');
+        console.error('Error saving patient:', err);
+      } finally {
+        setLoading(false);
+      }
     },
   });
+
+  useEffect(() => {
+    const fetchPatient = async () => {
+      if (isEdit && id) {
+        try {
+          setLoading(true);
+          const response = await getPatient(id);
+          formik.setValues(response.data);
+        } catch (err) {
+          setError('Failed to fetch patient details. Please try again later.');
+          console.error('Error fetching patient:', err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchPatient();
+  }, [id, isEdit]);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -49,6 +93,11 @@ const PatientForm: React.FC = () => {
         {isEdit ? 'Edit Patient' : 'Add New Patient'}
       </Typography>
       <Paper sx={{ p: 3 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
         <form onSubmit={formik.handleSubmit}>
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
@@ -136,12 +185,14 @@ const PatientForm: React.FC = () => {
                 <Button
                   variant="outlined"
                   onClick={() => navigate('/patients')}
+                  disabled={loading}
                 >
                   Cancel
                 </Button>
                 <Button
                   variant="contained"
                   type="submit"
+                  disabled={loading}
                 >
                   {isEdit ? 'Update' : 'Save'}
                 </Button>
