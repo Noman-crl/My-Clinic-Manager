@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './components/Layout/Sidebar';
-import Header from './components/Layout/Header';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import Layout from './components/Layout/Layout';
 import Dashboard from './components/Dashboard/Dashboard';
 import PatientList from './components/Patients/PatientList';
 import PatientForm from './components/Patients/PatientForm';
@@ -12,225 +13,188 @@ import AppointmentForm from './components/Appointments/AppointmentForm';
 import MedicalRecordsList from './components/MedicalRecords/MedicalRecordsList';
 import BillingList from './components/Billing/BillingList';
 import Reports from './components/Reports/Reports';
-import { useClinicStore } from './store';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Home from './pages/Home';
 
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+  },
+});
+
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+  
   if (!user) return <Navigate to="/signin" replace />;
-  return children;
+  return <Layout>{children}</Layout>;
 }
 
 function PublicHome() {
   const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+  
   if (user) return <Navigate to="/dashboard" replace />;
   return <Home />;
 }
 
 const App: React.FC = () => {
-  const [activeSection, setActiveSection] = useState('dashboard');
-  const [showPatientForm, setShowPatientForm] = useState(false);
-  const [showDoctorForm, setShowDoctorForm] = useState(false);
-  const [showAppointmentForm, setShowAppointmentForm] = useState(false);
-  const [editingPatient, setEditingPatient] = useState<string | null>(null);
-  const [editingDoctor, setEditingDoctor] = useState<string | null>(null);
-  const [editingAppointment, setEditingAppointment] = useState<string | null>(null);
-
-  const {
-    patients,
-    doctors,
-    appointments,
-    addPatient,
-    updatePatient,
-    deletePatient,
-    addDoctor,
-    updateDoctor,
-    deleteDoctor,
-    addAppointment,
-    updateAppointment,
-    deleteAppointment,
-  } = useClinicStore();
-
-  const handleAddPatient = () => {
-    setEditingPatient(null);
-    setShowPatientForm(true);
-  };
-
-  const handleEditPatient = (patientId: string) => {
-    setEditingPatient(patientId);
-    setShowPatientForm(true);
-  };
-
-  const handleSavePatient = (patientData: any) => {
-    if (editingPatient) {
-      updatePatient(editingPatient, patientData);
-    } else {
-      addPatient({
-        ...patientData,
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString(),
-      });
-    }
-    setShowPatientForm(false);
-    setEditingPatient(null);
-  };
-
-  const handleAddDoctor = () => {
-    setEditingDoctor(null);
-    setShowDoctorForm(true);
-  };
-
-  const handleEditDoctor = (doctorId: string) => {
-    setEditingDoctor(doctorId);
-    setShowDoctorForm(true);
-  };
-
-  const handleSaveDoctor = (doctorData: any) => {
-    if (editingDoctor) {
-      updateDoctor(editingDoctor, doctorData);
-    } else {
-      addDoctor({
-        ...doctorData,
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString(),
-      });
-    }
-    setShowDoctorForm(false);
-    setEditingDoctor(null);
-  };
-
-  const handleAddAppointment = () => {
-    setEditingAppointment(null);
-    setShowAppointmentForm(true);
-  };
-
-  const handleEditAppointment = (appointmentId: string) => {
-    setEditingAppointment(appointmentId);
-    setShowAppointmentForm(true);
-  };
-
-  const handleSaveAppointment = (appointmentData: any) => {
-    if (editingAppointment) {
-      updateAppointment(editingAppointment, appointmentData);
-    } else {
-      addAppointment({
-        ...appointmentData,
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString(),
-      });
-    }
-    setShowAppointmentForm(false);
-    setEditingAppointment(null);
-  };
-
-  const renderContent = () => {
-    if (showPatientForm) {
-      const patient = editingPatient
-        ? patients.find((p) => p.id === editingPatient)
-        : undefined;
-      return (
-        <PatientForm
-          patient={patient}
-          onSave={handleSavePatient}
-          onCancel={() => {
-            setShowPatientForm(false);
-            setEditingPatient(null);
-          }}
-        />
-      );
-    }
-
-    if (showDoctorForm) {
-      const doctor = editingDoctor
-        ? doctors.find((d) => d.id === editingDoctor)
-        : undefined;
-      return (
-        <DoctorForm
-          doctor={doctor}
-          onSave={handleSaveDoctor}
-          onCancel={() => {
-            setShowDoctorForm(false);
-            setEditingDoctor(null);
-          }}
-        />
-      );
-    }
-
-    if (showAppointmentForm) {
-      const appointment = editingAppointment
-        ? appointments.find((a) => a.id === editingAppointment)
-        : undefined;
-      return (
-        <AppointmentForm
-          appointment={appointment}
-          onSave={handleSaveAppointment}
-          onCancel={() => {
-            setShowAppointmentForm(false);
-            setEditingAppointment(null);
-          }}
-        />
-      );
-    }
-
-    switch (activeSection) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'patients':
-        return (
-          <PatientList
-            onAddPatient={handleAddPatient}
-            onEditPatient={handleEditPatient}
-          />
-        );
-      case 'doctors':
-        return (
-          <DoctorList
-            onAddDoctor={handleAddDoctor}
-            onEditDoctor={handleEditDoctor}
-          />
-        );
-      case 'appointments':
-        return (
-          <AppointmentList
-            onAddAppointment={handleAddAppointment}
-            onEditAppointment={handleEditAppointment}
-          />
-        );
-      case 'medical-records':
-        return <MedicalRecordsList />;
-      case 'billing':
-        return <BillingList />;
-      case 'reports':
-        return <Reports />;
-      default:
-        return <Navigate to="/dashboard" replace />;
-    }
-  };
-
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<PublicHome />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          {/* Add more protected routes as needed */}
-        </Routes>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<PublicHome />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Patient Routes */}
+            <Route
+              path="/patients"
+              element={
+                <ProtectedRoute>
+                  <PatientList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patients/new"
+              element={
+                <ProtectedRoute>
+                  <PatientForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patients/:id"
+              element={
+                <ProtectedRoute>
+                  <PatientForm />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Doctor Routes */}
+            <Route
+              path="/doctors"
+              element={
+                <ProtectedRoute>
+                  <DoctorList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/doctors/new"
+              element={
+                <ProtectedRoute>
+                  <DoctorForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/doctors/:id"
+              element={
+                <ProtectedRoute>
+                  <DoctorForm />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Appointment Routes */}
+            <Route
+              path="/appointments"
+              element={
+                <ProtectedRoute>
+                  <AppointmentList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/appointments/new"
+              element={
+                <ProtectedRoute>
+                  <AppointmentForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/appointments/:id"
+              element={
+                <ProtectedRoute>
+                  <AppointmentForm />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Medical Records Routes */}
+            <Route
+              path="/medical-records"
+              element={
+                <ProtectedRoute>
+                  <MedicalRecordsList />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Billing Routes */}
+            <Route
+              path="/billing"
+              element={
+                <ProtectedRoute>
+                  <BillingList />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Reports Routes */}
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 
