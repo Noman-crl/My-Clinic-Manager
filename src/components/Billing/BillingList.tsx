@@ -1,15 +1,45 @@
 import React, { useState } from 'react';
 import { Receipt, Search, Plus, DollarSign, Calendar, User, Filter, Eye, Download } from 'lucide-react';
 
+// Mock data for demo
+const mockPatients = [
+  { id: '1', firstName: 'Alice', lastName: 'Brown' },
+  { id: '2', firstName: 'Michael', lastName: 'Davis' },
+  { id: '3', firstName: 'Emma', lastName: 'Thompson' },
+];
+
+const mockInvoices = [
+  {
+    id: 'INV-001',
+    patientId: '1',
+    date: '2025-01-15',
+    total: 270.00,
+    tax: 20.00,
+    status: 'paid'
+  },
+  {
+    id: 'INV-002',
+    patientId: '2',
+    date: '2025-01-16',
+    total: 180.00,
+    tax: 15.00,
+    status: 'pending'
+  },
+  {
+    id: 'INV-003',
+    patientId: '3',
+    date: '2025-01-10',
+    total: 320.00,
+    tax: 25.00,
+    status: 'overdue'
+  },
+];
+
 export default function BillingList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  // TODO: Fetch invoices from API
-  const invoices: any[] = [];
 
-  if (invoices.length === 0) return <div>No invoices found.</div>;
-
-  const filteredInvoices = invoices.filter(invoice => {
+  const filteredInvoices = mockInvoices.filter(invoice => {
     const patient = mockPatients.find(p => p.id === invoice.patientId);
     
     const matchesSearch = patient && (
@@ -35,9 +65,9 @@ export default function BillingList() {
     }
   };
 
-  const totalRevenue = invoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.total, 0);
-  const pendingAmount = invoices.filter(inv => inv.status === 'pending').reduce((sum, inv) => sum + inv.total, 0);
-  const overdueAmount = invoices.filter(inv => inv.status === 'overdue').reduce((sum, inv) => sum + inv.total, 0);
+  const totalRevenue = mockInvoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.total, 0);
+  const pendingAmount = mockInvoices.filter(inv => inv.status === 'pending').reduce((sum, inv) => sum + inv.total, 0);
+  const overdueAmount = mockInvoices.filter(inv => inv.status === 'overdue').reduce((sum, inv) => sum + inv.total, 0);
 
   return (
     <div className="space-y-6">
