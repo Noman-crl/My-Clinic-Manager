@@ -1,19 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { login as apiLogin, register as apiRegister, getCurrentUser } from '../services/api';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { supabase } from '../lib/supabase';
+import { signIn, signUp, signOut, getCurrentUser } from '../services/supabaseApi';
+import type { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,26 +18,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      getCurrentUser()
-        .then((userData) => setUser(userData))
-        .catch(() => {
-          localStorage.removeItem('token');
-          setUser(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setLoading(false);
-    }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const response = await apiLogin(email, password);
-      localStorage.setItem('token', response.token);
-      setUser(response.user);
+      const { user } = await signIn(email, password);
+      setUser(user);
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -54,9 +51,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     try {
       setLoading(true);
-      const response = await apiRegister(name, email, password);
-      localStorage.setItem('token', response.token);
-      setUser(response.user);
+      const { user } = await signUp(email, password, { name });
+      setUser(user);
     } catch (error) {
       console.error('Register error:', error);
       throw error;
@@ -65,9 +61,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setUser(null);
+  const logout = async () => {
+    try {
+      await signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
   };
 
   return (

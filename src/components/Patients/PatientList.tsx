@@ -15,7 +15,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
   IconButton,
   Chip,
 } from '@mui/material';
@@ -28,20 +27,8 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon,
 } from '@mui/icons-material';
-import { getPatients, deletePatient } from '../../services/api';
-
-interface Patient {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  dateOfBirth: string;
-  gender: string;
-  address: string;
-  insuranceNumber?: string;
-  isActive: boolean;
-}
+import { getPatients, deletePatient } from '../../services/supabaseApi';
+import type { Patient } from '../../lib/supabase';
 
 const PatientList: React.FC = () => {
   const navigate = useNavigate();
@@ -49,24 +36,16 @@ const PatientList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     fetchPatients();
-  }, [page, rowsPerPage, searchTerm]);
+  }, []);
 
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      const response = await getPatients({
-        page: page + 1,
-        limit: rowsPerPage,
-        search: searchTerm,
-      });
-      setPatients(response.data.patients || []);
-      setTotalCount(response.data.total || 0);
+      const data = await getPatients();
+      setPatients(data);
       setError('');
     } catch (err) {
       setError('Failed to fetch patients. Please try again later.');
@@ -99,16 +78,13 @@ const PatientList: React.FC = () => {
     return age;
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
+  const filteredPatients = patients.filter(patient =>
+    `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.phone.includes(searchTerm)
+  );
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  if (loading && patients.length === 0) {
+  if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
@@ -161,20 +137,19 @@ const PatientList: React.FC = () => {
                 <TableCell>Age</TableCell>
                 <TableCell>Gender</TableCell>
                 <TableCell>Insurance</TableCell>
-                <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {patients.map((patient) => (
-                <TableRow key={patient._id} hover>
+              {filteredPatients.map((patient) => (
+                <TableRow key={patient.id} hover>
                   <TableCell>
                     <Box>
                       <Typography variant="subtitle2" fontWeight="bold">
-                        {patient.firstName} {patient.lastName}
+                        {patient.first_name} {patient.last_name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        ID: {patient._id.slice(-6)}
+                        ID: {patient.id.slice(-6)}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -192,7 +167,7 @@ const PatientList: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {calculateAge(patient.dateOfBirth)} years
+                      {calculateAge(patient.date_of_birth)} years
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -204,35 +179,28 @@ const PatientList: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {patient.insuranceNumber || 'N/A'}
+                      {patient.insurance_number || 'N/A'}
                     </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={patient.isActive ? 'Active' : 'Inactive'}
-                      size="small"
-                      color={patient.isActive ? 'success' : 'default'}
-                    />
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <IconButton
                         size="small"
-                        onClick={() => navigate(`/patients/${patient._id}`)}
+                        onClick={() => navigate(`/patients/${patient.id}`)}
                         color="primary"
                       >
                         <ViewIcon />
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => navigate(`/patients/${patient._id}`)}
+                        onClick={() => navigate(`/patients/${patient.id}`)}
                         color="success"
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => handleDeletePatient(patient._id)}
+                        onClick={() => handleDeletePatient(patient.id)}
                         color="error"
                       >
                         <DeleteIcon />
@@ -244,15 +212,6 @@ const PatientList: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={totalCount}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
       </Paper>
     </Box>
   );

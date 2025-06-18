@@ -7,15 +7,13 @@ import {
   Event as AppointmentIcon,
   Receipt as InvoiceIcon,
 } from '@mui/icons-material';
-import { getDashboardStats } from '../../services/api';
+import { getDashboardStats } from '../../services/supabaseApi';
 
 interface DashboardStats {
   totalPatients: number;
   totalDoctors: number;
   todayAppointments: number;
-  pendingAppointments: number;
-  monthlyRevenue: number;
-  pendingInvoices: number;
+  totalRevenue: number;
 }
 
 const Dashboard: React.FC = () => {
@@ -31,8 +29,8 @@ const Dashboard: React.FC = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await getDashboardStats();
-      setStats(response.data);
+      const data = await getDashboardStats();
+      setStats(data);
       setError('');
     } catch (err) {
       setError('Failed to fetch dashboard statistics');
@@ -83,28 +81,14 @@ const Dashboard: React.FC = () => {
       value: stats?.todayAppointments || 0,
       icon: <AppointmentIcon sx={{ fontSize: 40 }} />,
       color: '#ed6c02',
-      onClick: () => navigate('/appointments?filter=today'),
+      onClick: () => navigate('/appointments'),
     },
     {
-      title: 'Pending Appointments',
-      value: stats?.pendingAppointments || 0,
-      icon: <AppointmentIcon sx={{ fontSize: 40 }} />,
-      color: '#d32f2f',
-      onClick: () => navigate('/appointments?filter=pending'),
-    },
-    {
-      title: 'Monthly Revenue',
-      value: `$${stats?.monthlyRevenue?.toFixed(2) || '0.00'}`,
+      title: 'Total Revenue',
+      value: `$${stats?.totalRevenue?.toFixed(2) || '0.00'}`,
       icon: <InvoiceIcon sx={{ fontSize: 40 }} />,
       color: '#7b1fa2',
       onClick: () => navigate('/billing'),
-    },
-    {
-      title: 'Pending Invoices',
-      value: stats?.pendingInvoices || 0,
-      icon: <InvoiceIcon sx={{ fontSize: 40 }} />,
-      color: '#f57c00',
-      onClick: () => navigate('/billing?filter=pending'),
     },
   ];
 
@@ -115,7 +99,7 @@ const Dashboard: React.FC = () => {
       </Typography>
       <Grid container spacing={3}>
         {statCards.map((stat) => (
-          <Grid item xs={12} sm={6} md={4} key={stat.title}>
+          <Grid item xs={12} sm={6} md={3} key={stat.title}>
             <Paper
               sx={{
                 p: 3,
