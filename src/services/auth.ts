@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/auth';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/auth';
 
 export async function register(name: string, email: string, password: string) {
   const res = await axios.post(`${API_URL}/register`, { name, email, password });
@@ -17,4 +17,4 @@ export async function getCurrentUser(token: string) {
     headers: { Authorization: `Bearer ${token}` }
   });
   return res.data;
-} 
+}
