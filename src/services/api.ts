@@ -24,11 +24,30 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/signin';
+      // Don't redirect if we're already on signin page
+      if (window.location.pathname !== '/signin') {
+        window.location.href = '/signin';
+      }
     }
     return Promise.reject(error);
   }
 );
+
+// Auth endpoints
+export const login = async (email: string, password: string) => {
+  const response = await api.post('/auth/login', { email, password });
+  return response.data;
+};
+
+export const register = async (name: string, email: string, password: string) => {
+  const response = await api.post('/auth/register', { name, email, password });
+  return response.data;
+};
+
+export const getCurrentUser = async () => {
+  const response = await api.get('/auth/me');
+  return response.data;
+};
 
 // Dashboard
 export const getDashboardStats = () => api.get('/dashboard/stats');

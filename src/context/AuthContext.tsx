@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { login as apiLogin, register as apiRegister, getCurrentUser } from '../services/auth';
+import { login as apiLogin, register as apiRegister, getCurrentUser } from '../services/api';
 
 interface User {
   id: string;
   name: string;
   email: string;
+  role: string;
 }
 
 interface AuthContextType {
@@ -24,9 +25,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      getCurrentUser(token)
-        .then((u) => setUser(u))
-        .catch(() => setUser(null))
+      getCurrentUser()
+        .then((userData) => setUser(userData))
+        .catch(() => {
+          localStorage.removeItem('token');
+          setUser(null);
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -34,19 +38,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    const { token, user } = await apiLogin(email, password);
-    localStorage.setItem('token', token);
-    setUser(user);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const response = await apiLogin(email, password);
+      localStorage.setItem('token', response.token);
+      setUser(response.user);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const register = async (name: string, email: string, password: string) => {
-    setLoading(true);
-    const { token, user } = await apiRegister(name, email, password);
-    localStorage.setItem('token', token);
-    setUser(user);
-    setLoading(false);
+    try {
+      setLoading(true);
+      const response = await apiRegister(name, email, password);
+      localStorage.setItem('token', response.token);
+      setUser(response.user);
+    } catch (error) {
+      console.error('Register error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {
@@ -65,4 +81,4 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
-} 
+}
