@@ -18,10 +18,8 @@
     "@mui/material": "^7.1.1",
     "@mui/x-data-grid": "^7.22.2",
     "@mui/x-date-pickers": "^7.22.2",
-    "@supabase/supabase-js": "^2.39.0",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
-    "axios": "^1.6.7",
     "date-fns": "^3.3.1",
     "formik": "^2.4.5",
     "lucide-react": "^0.344.0",
@@ -32,8 +30,7 @@
     "react-router-dom": "^6.22.1",
     "tailwindcss": "^3.4.1",
     "vite": "^5.4.10",
-    "yup": "^1.4.0",
-    "zustand": "^4.5.1"
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",

@@ -1,20 +1,2 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/auth';
-
-export async function register(name: string, email: string, password: string) {
-  const res = await axios.post(`${API_URL}/register`, { name, email, password });
-  return res.data;
-}
-
-export async function login(email: string, password: string) {
-  const res = await axios.post(`${API_URL}/login`, { email, password });
-  return res.data;
-}
-
-export async function getCurrentUser(token: string) {
-  const res = await axios.get(`${API_URL}/me`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  return res.data;
-}
+// This file is no longer needed - using mock auth
+export const mockMessage = "Using mock auth in App.tsx";
