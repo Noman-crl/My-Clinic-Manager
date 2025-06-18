@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Grid, Paper, Typography, Box } from '@mui/material';
+import { Grid, Paper, Typography, Box, CircularProgress } from '@mui/material';
 import {
   People as PeopleIcon,
   LocalHospital as DoctorIcon,
@@ -8,42 +8,64 @@ import {
   Receipt as InvoiceIcon,
 } from '@mui/icons-material';
 
+interface DashboardStats {
+  totalPatients: number;
+  totalDoctors: number;
+  todayAppointments: number;
+  totalRevenue: number;
+}
+
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for demo
-  const stats = {
-    totalPatients: 150,
-    totalDoctors: 12,
-    todayAppointments: 8,
-    totalRevenue: 25000
-  };
+  useEffect(() => {
+    // Simulate loading stats
+    setTimeout(() => {
+      setStats({
+        totalPatients: 156,
+        totalDoctors: 12,
+        todayAppointments: 8,
+        totalRevenue: 45250.00
+      });
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   const statCards = [
     {
       title: 'Total Patients',
-      value: stats.totalPatients,
+      value: stats?.totalPatients || 0,
       icon: <PeopleIcon sx={{ fontSize: 40 }} />,
       color: '#1976d2',
       onClick: () => navigate('/patients'),
     },
     {
       title: 'Total Doctors',
-      value: stats.totalDoctors,
+      value: stats?.totalDoctors || 0,
       icon: <DoctorIcon sx={{ fontSize: 40 }} />,
       color: '#2e7d32',
       onClick: () => navigate('/doctors'),
     },
     {
       title: "Today's Appointments",
-      value: stats.todayAppointments,
+      value: stats?.todayAppointments || 0,
       icon: <AppointmentIcon sx={{ fontSize: 40 }} />,
       color: '#ed6c02',
       onClick: () => navigate('/appointments'),
     },
     {
       title: 'Total Revenue',
-      value: `$${stats.totalRevenue.toFixed(2)}`,
+      value: `$${stats?.totalRevenue?.toFixed(2) || '0.00'}`,
       icon: <InvoiceIcon sx={{ fontSize: 40 }} />,
       color: '#7b1fa2',
       onClick: () => navigate('/billing'),

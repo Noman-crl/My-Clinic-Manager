@@ -12,7 +12,6 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { getDoctor, createDoctor, updateDoctor } from '../../services/supabaseApi';
 
 const validationSchema = yup.object({
   first_name: yup.string().required('First name is required'),
@@ -48,11 +47,11 @@ const DoctorForm: React.FC = () => {
       try {
         setLoading(true);
         setError('');
-        if (isEdit && id) {
-          await updateDoctor(id, values);
-        } else {
-          await createDoctor(values);
-        }
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Doctor saved:', values);
         navigate('/doctors');
       } catch (err) {
         setError('Failed to save doctor. Please try again later.');
@@ -64,31 +63,23 @@ const DoctorForm: React.FC = () => {
   });
 
   useEffect(() => {
-    const fetchDoctor = async () => {
-      if (isEdit && id) {
-        try {
-          setLoading(true);
-          const doctor = await getDoctor(id);
-          formik.setValues({
-            first_name: doctor.first_name,
-            last_name: doctor.last_name,
-            email: doctor.email,
-            phone: doctor.phone,
-            specialization: doctor.specialization,
-            license_number: doctor.license_number,
-            experience: doctor.experience,
-            consultation_fee: doctor.consultation_fee,
-          });
-        } catch (err) {
-          setError('Failed to fetch doctor details. Please try again later.');
-          console.error('Error fetching doctor:', err);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchDoctor();
+    if (isEdit && id) {
+      // Mock loading existing doctor data
+      setLoading(true);
+      setTimeout(() => {
+        formik.setValues({
+          first_name: 'John',
+          last_name: 'Smith',
+          email: 'john.smith@clinic.com',
+          phone: '+1-555-0101',
+          specialization: 'Cardiology',
+          license_number: 'MD001',
+          experience: 15,
+          consultation_fee: 200,
+        });
+        setLoading(false);
+      }, 500);
+    }
   }, [id, isEdit]);
 
   if (loading && isEdit) {

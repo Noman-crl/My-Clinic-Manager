@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
   Typography,
   Paper,
+  CircularProgress,
+  Alert,
   TextField,
   InputAdornment,
   Table,
@@ -28,44 +30,72 @@ import {
   Cancel as CancelIcon,
 } from '@mui/icons-material';
 
-// Mock data for demo
+// Mock data
 const mockAppointments = [
   {
     id: '1',
-    patient_name: 'Alice Brown',
-    doctor_name: 'Dr. John Smith',
-    specialization: 'Cardiology',
-    appointment_date: '2025-01-20',
+    patient_id: '1',
+    doctor_id: '1',
+    appointment_date: '2024-01-15',
     appointment_time: '10:00',
     reason: 'Regular checkup',
     status: 'scheduled',
+    notes: 'Patient requested morning appointment',
+    patients: { first_name: 'Alice', last_name: 'Brown', phone: '+1-555-0201' },
+    doctors: { first_name: 'John', last_name: 'Smith', specialization: 'Cardiology' }
   },
   {
     id: '2',
-    patient_name: 'Michael Davis',
-    doctor_name: 'Dr. Michael Brown',
-    specialization: 'Orthopedics',
-    appointment_date: '2025-01-21',
+    patient_id: '2',
+    doctor_id: '2',
+    appointment_date: '2024-01-16',
     appointment_time: '14:00',
-    reason: 'Knee pain consultation',
+    reason: 'Pediatric checkup',
     status: 'confirmed',
+    notes: '',
+    patients: { first_name: 'Emma', last_name: 'Thompson', phone: '+1-555-0205' },
+    doctors: { first_name: 'Sarah', last_name: 'Johnson', specialization: 'Pediatrics' }
   },
   {
     id: '3',
-    patient_name: 'Emma Thompson',
-    doctor_name: 'Dr. Sarah Johnson',
-    specialization: 'Pediatrics',
-    appointment_date: '2025-01-22',
+    patient_id: '3',
+    doctor_id: '3',
+    appointment_date: '2024-01-17',
     appointment_time: '09:30',
-    reason: 'Pediatric checkup',
-    status: 'scheduled',
-  },
+    reason: 'Knee pain consultation',
+    status: 'completed',
+    notes: 'Follow-up required',
+    patients: { first_name: 'Michael', last_name: 'Davis', phone: '+1-555-0203' },
+    doctors: { first_name: 'Michael', last_name: 'Brown', specialization: 'Orthopedics' }
+  }
 ];
 
 const AppointmentList: React.FC = () => {
   const navigate = useNavigate();
+  const [appointments, setAppointments] = useState(mockAppointments);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  useEffect(() => {
+    // Simulate loading
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  }, []);
+
+  const handleDeleteAppointment = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this appointment?')) {
+      try {
+        setAppointments(prev => prev.filter(apt => apt.id !== id));
+      } catch (err) {
+        setError('Failed to delete appointment. Please try again later.');
+        console.error('Error deleting appointment:', err);
+      }
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -86,16 +116,26 @@ const AppointmentList: React.FC = () => {
     }
   };
 
-  const filteredAppointments = mockAppointments.filter(appointment => {
+  const filteredAppointments = appointments.filter(appointment => {
     const matchesSearch = searchTerm === '' || 
-      appointment.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appointment.doctor_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (appointment.patients && 
+        `${appointment.patients.first_name} ${appointment.patients.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (appointment.doctors && 
+        `${appointment.doctors.first_name} ${appointment.doctors.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
       appointment.reason.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === '' || appointment.status === statusFilter;
     
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -109,6 +149,12 @@ const AppointmentList: React.FC = () => {
           Schedule Appointment
         </Button>
       </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       <Paper sx={{ mb: 2, p: 2 }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -161,17 +207,28 @@ const AppointmentList: React.FC = () => {
               {filteredAppointments.map((appointment) => (
                 <TableRow key={appointment.id} hover>
                   <TableCell>
-                    <Typography variant="subtitle2" fontWeight="bold">
-                      {appointment.patient_name}
-                    </Typography>
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight="bold">
+                        {appointment.patients ? 
+                          `${appointment.patients.first_name} ${appointment.patients.last_name}` : 
+                          'Unknown Patient'
+                        }
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {appointment.patients?.phone || 'No phone'}
+                      </Typography>
+                    </Box>
                   </TableCell>
                   <TableCell>
                     <Box>
                       <Typography variant="subtitle2">
-                        {appointment.doctor_name}
+                        {appointment.doctors ? 
+                          `Dr. ${appointment.doctors.first_name} ${appointment.doctors.last_name}` : 
+                          'Unknown Doctor'
+                        }
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {appointment.specialization}
+                        {appointment.doctors?.specialization || 'No specialization'}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -216,6 +273,7 @@ const AppointmentList: React.FC = () => {
                       {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
                         <IconButton
                           size="small"
+                          onClick={() => handleDeleteAppointment(appointment.id)}
                           color="error"
                         >
                           <CancelIcon />

@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
   Typography,
   Paper,
+  CircularProgress,
+  Alert,
   TextField,
   InputAdornment,
   Table,
@@ -26,7 +28,7 @@ import {
   Email as EmailIcon,
 } from '@mui/icons-material';
 
-// Mock data for demo
+// Mock data
 const mockPatients = [
   {
     id: '1',
@@ -36,7 +38,10 @@ const mockPatients = [
     phone: '+1-555-0201',
     date_of_birth: '1985-03-15',
     gender: 'female',
-    insurance_number: 'INS001',
+    address: '123 Main St, New York, NY 10001',
+    emergency_contact: 'Bob Brown',
+    emergency_phone: '+1-555-0202',
+    insurance_number: 'INS001'
   },
   {
     id: '2',
@@ -46,7 +51,10 @@ const mockPatients = [
     phone: '+1-555-0203',
     date_of_birth: '1978-07-22',
     gender: 'male',
-    insurance_number: 'INS002',
+    address: '456 Oak Ave, Los Angeles, CA 90001',
+    emergency_contact: 'Lisa Davis',
+    emergency_phone: '+1-555-0204',
+    insurance_number: 'INS002'
   },
   {
     id: '3',
@@ -56,13 +64,38 @@ const mockPatients = [
     phone: '+1-555-0205',
     date_of_birth: '2010-12-08',
     gender: 'female',
-    insurance_number: 'INS003',
-  },
+    address: '789 Pine St, Chicago, IL 60601',
+    emergency_contact: 'James Thompson',
+    emergency_phone: '+1-555-0206',
+    insurance_number: 'INS003'
+  }
 ];
 
 const PatientList: React.FC = () => {
   const navigate = useNavigate();
+  const [patients, setPatients] = useState(mockPatients);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    // Simulate loading
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  }, []);
+
+  const handleDeletePatient = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this patient?')) {
+      try {
+        setPatients(prev => prev.filter(patient => patient.id !== id));
+      } catch (err) {
+        setError('Failed to delete patient. Please try again later.');
+        console.error('Error deleting patient:', err);
+      }
+    }
+  };
 
   const calculateAge = (dateOfBirth: string) => {
     const today = new Date();
@@ -75,11 +108,19 @@ const PatientList: React.FC = () => {
     return age;
   };
 
-  const filteredPatients = mockPatients.filter(patient =>
+  const filteredPatients = patients.filter(patient =>
     `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.phone.includes(searchTerm)
   );
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -93,6 +134,12 @@ const PatientList: React.FC = () => {
           Add Patient
         </Button>
       </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       <Paper sx={{ mb: 2, p: 2 }}>
         <TextField
@@ -132,7 +179,7 @@ const PatientList: React.FC = () => {
                         {patient.first_name} {patient.last_name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        ID: {patient.id}
+                        ID: {patient.id.slice(-6)}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -183,6 +230,7 @@ const PatientList: React.FC = () => {
                       </IconButton>
                       <IconButton
                         size="small"
+                        onClick={() => handleDeletePatient(patient.id)}
                         color="error"
                       >
                         <DeleteIcon />

@@ -13,7 +13,6 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { getPatient, createPatient, updatePatient } from '../../services/supabaseApi';
 
 const validationSchema = yup.object({
   first_name: yup.string().required('First name is required'),
@@ -52,11 +51,11 @@ const PatientForm: React.FC = () => {
       try {
         setLoading(true);
         setError('');
-        if (isEdit && id) {
-          await updatePatient(id, values);
-        } else {
-          await createPatient(values);
-        }
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Patient saved:', values);
         navigate('/patients');
       } catch (err) {
         setError('Failed to save patient. Please try again later.');
@@ -68,33 +67,25 @@ const PatientForm: React.FC = () => {
   });
 
   useEffect(() => {
-    const fetchPatient = async () => {
-      if (isEdit && id) {
-        try {
-          setLoading(true);
-          const patient = await getPatient(id);
-          formik.setValues({
-            first_name: patient.first_name,
-            last_name: patient.last_name,
-            email: patient.email,
-            phone: patient.phone,
-            date_of_birth: patient.date_of_birth,
-            gender: patient.gender,
-            address: patient.address,
-            emergency_contact: patient.emergency_contact,
-            emergency_phone: patient.emergency_phone,
-            insurance_number: patient.insurance_number || '',
-          });
-        } catch (err) {
-          setError('Failed to fetch patient details. Please try again later.');
-          console.error('Error fetching patient:', err);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchPatient();
+    if (isEdit && id) {
+      // Mock loading existing patient data
+      setLoading(true);
+      setTimeout(() => {
+        formik.setValues({
+          first_name: 'Alice',
+          last_name: 'Brown',
+          email: 'alice.brown@email.com',
+          phone: '+1-555-0201',
+          date_of_birth: '1985-03-15',
+          gender: 'female',
+          address: '123 Main St, New York, NY 10001',
+          emergency_contact: 'Bob Brown',
+          emergency_phone: '+1-555-0202',
+          insurance_number: 'INS001',
+        });
+        setLoading(false);
+      }, 500);
+    }
   }, [id, isEdit]);
 
   if (loading && isEdit) {

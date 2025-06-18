@@ -13,14 +13,6 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { 
-  getAppointment, 
-  createAppointment, 
-  updateAppointment,
-  getPatients,
-  getDoctors 
-} from '../../services/supabaseApi';
-import type { Patient, Doctor } from '../../lib/supabase';
 
 const validationSchema = yup.object({
   patient_id: yup.string().required('Patient is required'),
@@ -31,14 +23,25 @@ const validationSchema = yup.object({
   status: yup.string().required('Status is required'),
 });
 
+// Mock data
+const mockPatients = [
+  { id: '1', first_name: 'Alice', last_name: 'Brown', email: 'alice.brown@email.com', phone: '+1-555-0201' },
+  { id: '2', first_name: 'Michael', last_name: 'Davis', email: 'michael.davis@email.com', phone: '+1-555-0203' },
+  { id: '3', first_name: 'Emma', last_name: 'Thompson', email: 'emma.thompson@email.com', phone: '+1-555-0205' },
+];
+
+const mockDoctors = [
+  { id: '1', first_name: 'John', last_name: 'Smith', specialization: 'Cardiology' },
+  { id: '2', first_name: 'Sarah', last_name: 'Johnson', specialization: 'Pediatrics' },
+  { id: '3', first_name: 'Michael', last_name: 'Brown', specialization: 'Orthopedics' },
+];
+
 const AppointmentForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = Boolean(id);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
 
   const formik = useFormik({
     initialValues: {
@@ -55,11 +58,11 @@ const AppointmentForm: React.FC = () => {
       try {
         setLoading(true);
         setError('');
-        if (isEdit && id) {
-          await updateAppointment(id, values);
-        } else {
-          await createAppointment(values);
-        }
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        console.log('Appointment saved:', values);
         navigate('/appointments');
       } catch (err) {
         setError('Failed to save appointment. Please try again later.');
@@ -71,40 +74,25 @@ const AppointmentForm: React.FC = () => {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [patientsData, doctorsData] = await Promise.all([
-          getPatients(),
-          getDoctors()
-        ]);
-        setPatients(patientsData);
-        setDoctors(doctorsData);
-
-        if (isEdit && id) {
-          const appointment = await getAppointment(id);
-          formik.setValues({
-            patient_id: appointment.patient_id,
-            doctor_id: appointment.doctor_id,
-            appointment_date: appointment.appointment_date,
-            appointment_time: appointment.appointment_time,
-            reason: appointment.reason,
-            status: appointment.status,
-            notes: appointment.notes || '',
-          });
-        }
-      } catch (err) {
-        setError('Failed to fetch data. Please try again later.');
-        console.error('Error fetching data:', err);
-      } finally {
+    if (isEdit && id) {
+      // Mock loading existing appointment data
+      setLoading(true);
+      setTimeout(() => {
+        formik.setValues({
+          patient_id: '1',
+          doctor_id: '1',
+          appointment_date: '2024-01-15',
+          appointment_time: '10:00',
+          reason: 'Regular checkup',
+          status: 'scheduled',
+          notes: 'Patient requested morning appointment',
+        });
         setLoading(false);
-      }
-    };
-
-    fetchData();
+      }, 500);
+    }
   }, [id, isEdit]);
 
-  if (loading && (patients.length === 0 || doctors.length === 0)) {
+  if (loading && isEdit) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
@@ -137,7 +125,7 @@ const AppointmentForm: React.FC = () => {
                 error={formik.touched.patient_id && Boolean(formik.errors.patient_id)}
                 helperText={formik.touched.patient_id && formik.errors.patient_id}
               >
-                {patients.map((patient) => (
+                {mockPatients.map((patient) => (
                   <MenuItem key={patient.id} value={patient.id}>
                     {patient.first_name} {patient.last_name}
                   </MenuItem>
@@ -156,7 +144,7 @@ const AppointmentForm: React.FC = () => {
                 error={formik.touched.doctor_id && Boolean(formik.errors.doctor_id)}
                 helperText={formik.touched.doctor_id && formik.errors.doctor_id}
               >
-                {doctors.map((doctor) => (
+                {mockDoctors.map((doctor) => (
                   <MenuItem key={doctor.id} value={doctor.id}>
                     Dr. {doctor.first_name} {doctor.last_name} - {doctor.specialization}
                   </MenuItem>
