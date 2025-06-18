@@ -1,91 +1,49 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Grid, Paper, Typography, Box, CircularProgress, Alert } from '@mui/material';
+import { Grid, Paper, Typography, Box } from '@mui/material';
 import {
   People as PeopleIcon,
   LocalHospital as DoctorIcon,
   Event as AppointmentIcon,
   Receipt as InvoiceIcon,
 } from '@mui/icons-material';
-import { getDashboardStats } from '../../services/supabaseApi';
-
-interface DashboardStats {
-  totalPatients: number;
-  totalDoctors: number;
-  todayAppointments: number;
-  totalRevenue: number;
-}
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      const data = await getDashboardStats();
-      setStats(data);
-      setError('');
-    } catch (err) {
-      setError('Failed to fetch dashboard statistics');
-      console.error('Error fetching stats:', err);
-    } finally {
-      setLoading(false);
-    }
+  // Mock data for demo
+  const stats = {
+    totalPatients: 150,
+    totalDoctors: 12,
+    todayAppointments: 8,
+    totalRevenue: 25000
   };
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box>
-        <Typography variant="h4" gutterBottom>
-          Dashboard
-        </Typography>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      </Box>
-    );
-  }
 
   const statCards = [
     {
       title: 'Total Patients',
-      value: stats?.totalPatients || 0,
+      value: stats.totalPatients,
       icon: <PeopleIcon sx={{ fontSize: 40 }} />,
       color: '#1976d2',
       onClick: () => navigate('/patients'),
     },
     {
       title: 'Total Doctors',
-      value: stats?.totalDoctors || 0,
+      value: stats.totalDoctors,
       icon: <DoctorIcon sx={{ fontSize: 40 }} />,
       color: '#2e7d32',
       onClick: () => navigate('/doctors'),
     },
     {
       title: "Today's Appointments",
-      value: stats?.todayAppointments || 0,
+      value: stats.todayAppointments,
       icon: <AppointmentIcon sx={{ fontSize: 40 }} />,
       color: '#ed6c02',
       onClick: () => navigate('/appointments'),
     },
     {
       title: 'Total Revenue',
-      value: `$${stats?.totalRevenue?.toFixed(2) || '0.00'}`,
+      value: `$${stats.totalRevenue.toFixed(2)}`,
       icon: <InvoiceIcon sx={{ fontSize: 40 }} />,
       color: '#7b1fa2',
       onClick: () => navigate('/billing'),

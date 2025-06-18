@@ -13,7 +13,6 @@ import AppointmentForm from './components/Appointments/AppointmentForm';
 import MedicalRecordsList from './components/MedicalRecords/MedicalRecordsList';
 import BillingList from './components/Billing/BillingList';
 import Reports from './components/Reports/Reports';
-import { AuthProvider, useAuth } from './context/AuthContext';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Home from './pages/Home';
@@ -28,6 +27,35 @@ const theme = createTheme({
     },
   },
 });
+
+// Simple auth state management
+const useAuth = () => {
+  const [user, setUser] = React.useState<any>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    // Simulate login - in real app this would call Supabase
+    setTimeout(() => {
+      setUser({ email, name: 'Demo User' });
+      setLoading(false);
+    }, 1000);
+  };
+
+  const register = async (name: string, email: string, password: string) => {
+    setLoading(true);
+    setTimeout(() => {
+      setUser({ email, name });
+      setLoading(false);
+    }, 1000);
+  };
+
+  const logout = () => {
+    setUser(null);
+  };
+
+  return { user, loading, login, register, logout };
+};
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
@@ -63,137 +91,135 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AuthProvider>
-        <Router>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<PublicHome />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            
-            {/* Protected Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Patient Routes */}
-            <Route
-              path="/patients"
-              element={
-                <ProtectedRoute>
-                  <PatientList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/patients/new"
-              element={
-                <ProtectedRoute>
-                  <PatientForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/patients/:id"
-              element={
-                <ProtectedRoute>
-                  <PatientForm />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Doctor Routes */}
-            <Route
-              path="/doctors"
-              element={
-                <ProtectedRoute>
-                  <DoctorList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/doctors/new"
-              element={
-                <ProtectedRoute>
-                  <DoctorForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/doctors/:id"
-              element={
-                <ProtectedRoute>
-                  <DoctorForm />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Appointment Routes */}
-            <Route
-              path="/appointments"
-              element={
-                <ProtectedRoute>
-                  <AppointmentList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/appointments/new"
-              element={
-                <ProtectedRoute>
-                  <AppointmentForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/appointments/:id"
-              element={
-                <ProtectedRoute>
-                  <AppointmentForm />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Medical Records Routes */}
-            <Route
-              path="/medical-records"
-              element={
-                <ProtectedRoute>
-                  <MedicalRecordsList />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Billing Routes */}
-            <Route
-              path="/billing"
-              element={
-                <ProtectedRoute>
-                  <BillingList />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Reports Routes */}
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute>
-                  <Reports />
-                </ProtectedRoute>
-              }
-            />
-            
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Router>
-      </AuthProvider>
+      <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<PublicHome />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Patient Routes */}
+          <Route
+            path="/patients"
+            element={
+              <ProtectedRoute>
+                <PatientList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patients/new"
+            element={
+              <ProtectedRoute>
+                <PatientForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/patients/:id"
+            element={
+              <ProtectedRoute>
+                <PatientForm />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Doctor Routes */}
+          <Route
+            path="/doctors"
+            element={
+              <ProtectedRoute>
+                <DoctorList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/doctors/new"
+            element={
+              <ProtectedRoute>
+                <DoctorForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/doctors/:id"
+            element={
+              <ProtectedRoute>
+                <DoctorForm />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Appointment Routes */}
+          <Route
+            path="/appointments"
+            element={
+              <ProtectedRoute>
+                <AppointmentList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/appointments/new"
+            element={
+              <ProtectedRoute>
+                <AppointmentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/appointments/:id"
+            element={
+              <ProtectedRoute>
+                <AppointmentForm />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Medical Records Routes */}
+          <Route
+            path="/medical-records"
+            element={
+              <ProtectedRoute>
+                <MedicalRecordsList />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Billing Routes */}
+          <Route
+            path="/billing"
+            element={
+              <ProtectedRoute>
+                <BillingList />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Reports Routes */}
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <Reports />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Router>
     </ThemeProvider>
   );
 };

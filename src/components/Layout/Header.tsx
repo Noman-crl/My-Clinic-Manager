@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -15,10 +16,9 @@ import {
   AccountCircle,
   ExitToApp as LogoutIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../../context/AuthContext';
 
 const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notificationsAnchor, setNotificationsAnchor] = useState<null | HTMLElement>(null);
 
@@ -39,7 +39,7 @@ const Header: React.FC = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    navigate('/signin');
     handleProfileMenuClose();
   };
 
@@ -73,7 +73,7 @@ const Header: React.FC = () => {
             sx={{ ml: 1 }}
           >
             <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-              {user?.name?.charAt(0) || 'U'}
+              U
             </Avatar>
           </IconButton>
         </Box>
@@ -115,8 +115,8 @@ const Header: React.FC = () => {
         >
           <MenuItem disabled>
             <Box>
-              <Typography variant="subtitle2">{user?.name}</Typography>
-              <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
+              <Typography variant="subtitle2">Demo User</Typography>
+              <Typography variant="caption" color="text.secondary">admin@admin.com</Typography>
             </Box>
           </MenuItem>
           <MenuItem onClick={handleProfileMenuClose}>
