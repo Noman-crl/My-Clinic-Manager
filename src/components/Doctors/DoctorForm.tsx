@@ -1,271 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { Doctor, DoctorSchedule } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Paper,
+  Grid,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import { getDoctor, createDoctor, updateDoctor } from '../../services/supabaseApi';
 
-interface DoctorFormProps {
-  doctor?: Doctor;
-  onSave: (doctorData: Partial<Doctor>) => void;
-  onCancel: () => void;
-}
+const validationSchema = yup.object({
+  first_name: yup.string().required('First name is required'),
+  last_name: yup.string().required('Last name is required'),
+  email: yup.string().email('Enter a valid email').required('Email is required'),
+  phone: yup.string().required('Phone number is required'),
+  specialization: yup.string().required('Specialization is required'),
+  license_number: yup.string().required('License number is required'),
+  experience: yup.number().required('Experience is required').min(0, 'Experience must be positive'),
+  consultation_fee: yup.number().required('Consultation fee is required').min(0, 'Fee must be positive'),
+});
 
-const DoctorForm: React.FC<DoctorFormProps> = ({ doctor, onSave, onCancel }) => {
-  const [formData, setFormData] = useState<Partial<Doctor>>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    specialization: '',
-    licenseNumber: '',
-    experience: 0,
-    consultationFee: 0,
-    schedule: [],
+const DoctorForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = Boolean(id);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const formik = useFormik({
+    initialValues: {
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      specialization: '',
+      license_number: '',
+      experience: 0,
+      consultation_fee: 0,
+    },
+    validationSchema: validationSchema,
+    onSubmit: async (values) => {
+      try {
+        setLoading(true);
+        setError('');
+        if (isEdit && id) {
+          await updateDoctor(id, values);
+        } else {
+          await createDoctor(values);
+        }
+        navigate('/doctors');
+      } catch (err) {
+        setError('Failed to save doctor. Please try again later.');
+        console.error('Error saving doctor:', err);
+      } finally {
+        setLoading(false);
+      }
+    },
   });
 
   useEffect(() => {
-    if (doctor) {
-      setFormData(doctor);
-    }
-  }, [doctor]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleScheduleChange = (day: string, field: keyof DoctorSchedule, value: string | boolean) => {
-    setFormData((prev) => {
-      const schedule = [...(prev.schedule || [])];
-      const dayIndex = schedule.findIndex((s) => s.day === day);
-
-      if (dayIndex === -1) {
-        schedule.push({
-          day,
-          startTime: '',
-          endTime: '',
-          isAvailable: true,
-          [field]: value,
-        });
-      } else {
-        schedule[dayIndex] = {
-          ...schedule[dayIndex],
-          [field]: value,
-        };
+    const fetchDoctor = async () => {
+      if (isEdit && id) {
+        try {
+          setLoading(true);
+          const doctor = await getDoctor(id);
+          formik.setValues({
+            first_name: doctor.first_name,
+            last_name: doctor.last_name,
+            email: doctor.email,
+            phone: doctor.phone,
+            specialization: doctor.specialization,
+            license_number: doctor.license_number,
+            experience: doctor.experience,
+            consultation_fee: doctor.consultation_fee,
+          });
+        } catch (err) {
+          setError('Failed to fetch doctor details. Please try again later.');
+          console.error('Error fetching doctor:', err);
+        } finally {
+          setLoading(false);
+        }
       }
+    };
 
-      return {
-        ...prev,
-        schedule,
-      };
-    });
-  };
+    fetchDoctor();
+  }, [id, isEdit]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  if (loading && isEdit) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-        {doctor ? 'Edit Doctor' : 'Add New Doctor'}
-      </h2>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-              First Name
-            </label>
-            <input
-              type="text"
-              name="firstName"
-              id="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-              Last Name
-            </label>
-            <input
-              type="text"
-              name="lastName"
-              id="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              id="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-              Phone
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              id="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="specialization" className="block text-sm font-medium text-gray-700">
-              Specialization
-            </label>
-            <input
-              type="text"
-              name="specialization"
-              id="specialization"
-              value={formData.specialization}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="licenseNumber" className="block text-sm font-medium text-gray-700">
-              License Number
-            </label>
-            <input
-              type="text"
-              name="licenseNumber"
-              id="licenseNumber"
-              value={formData.licenseNumber}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="experience" className="block text-sm font-medium text-gray-700">
-              Years of Experience
-            </label>
-            <input
-              type="number"
-              name="experience"
-              id="experience"
-              value={formData.experience}
-              onChange={handleChange}
-              required
-              min="0"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="consultationFee" className="block text-sm font-medium text-gray-700">
-              Consultation Fee
-            </label>
-            <input
-              type="number"
-              name="consultationFee"
-              id="consultationFee"
-              value={formData.consultationFee}
-              onChange={handleChange}
-              required
-              min="0"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Schedule */}
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Schedule</h3>
-          <div className="space-y-4">
-            {days.map((day) => {
-              const schedule = formData.schedule?.find((s) => s.day === day) || {
-                day,
-                startTime: '',
-                endTime: '',
-                isAvailable: false,
-              };
-
-              return (
-                <div key={day} className="flex items-center space-x-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      {day}
-                    </label>
-                    <div className="mt-1 flex space-x-2">
-                      <input
-                        type="time"
-                        value={schedule.startTime}
-                        onChange={(e) => handleScheduleChange(day, 'startTime', e.target.value)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      />
-                      <span className="flex items-center text-gray-500">to</span>
-                      <input
-                        type="time"
-                        value={schedule.endTime}
-                        onChange={(e) => handleScheduleChange(day, 'endTime', e.target.value)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={schedule.isAvailable}
-                      onChange={(e) => handleScheduleChange(day, 'isAvailable', e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label className="ml-2 block text-sm text-gray-900">Available</label>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            {doctor ? 'Update Doctor' : 'Add Doctor'}
-          </button>
-        </div>
-      </form>
-    </div>
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        {isEdit ? 'Edit Doctor' : 'Add New Doctor'}
+      </Typography>
+      <Paper sx={{ p: 3 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        <form onSubmit={formik.handleSubmit}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="first_name"
+                name="first_name"
+                label="First Name"
+                value={formik.values.first_name}
+                onChange={formik.handleChange}
+                error={formik.touched.first_name && Boolean(formik.errors.first_name)}
+                helperText={formik.touched.first_name && formik.errors.first_name}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="last_name"
+                name="last_name"
+                label="Last Name"
+                value={formik.values.last_name}
+                onChange={formik.handleChange}
+                error={formik.touched.last_name && Boolean(formik.errors.last_name)}
+                helperText={formik.touched.last_name && formik.errors.last_name}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="email"
+                name="email"
+                label="Email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                error={formik.touched.email && Boolean(formik.errors.email)}
+                helperText={formik.touched.email && formik.errors.email}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="phone"
+                name="phone"
+                label="Phone"
+                value={formik.values.phone}
+                onChange={formik.handleChange}
+                error={formik.touched.phone && Boolean(formik.errors.phone)}
+                helperText={formik.touched.phone && formik.errors.phone}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="specialization"
+                name="specialization"
+                label="Specialization"
+                value={formik.values.specialization}
+                onChange={formik.handleChange}
+                error={formik.touched.specialization && Boolean(formik.errors.specialization)}
+                helperText={formik.touched.specialization && formik.errors.specialization}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="license_number"
+                name="license_number"
+                label="License Number"
+                value={formik.values.license_number}
+                onChange={formik.handleChange}
+                error={formik.touched.license_number && Boolean(formik.errors.license_number)}
+                helperText={formik.touched.license_number && formik.errors.license_number}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="experience"
+                name="experience"
+                label="Years of Experience"
+                type="number"
+                value={formik.values.experience}
+                onChange={formik.handleChange}
+                error={formik.touched.experience && Boolean(formik.errors.experience)}
+                helperText={formik.touched.experience && formik.errors.experience}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="consultation_fee"
+                name="consultation_fee"
+                label="Consultation Fee"
+                type="number"
+                value={formik.values.consultation_fee}
+                onChange={formik.handleChange}
+                error={formik.touched.consultation_fee && Boolean(formik.errors.consultation_fee)}
+                helperText={formik.touched.consultation_fee && formik.errors.consultation_fee}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate('/doctors')}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? <CircularProgress size={24} /> : (isEdit ? 'Update' : 'Save')}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </form>
+      </Paper>
+    </Box>
   );
 };
 
-export default DoctorForm; 
+export default DoctorForm;

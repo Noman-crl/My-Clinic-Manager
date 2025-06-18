@@ -1,203 +1,269 @@
-import React, { useState, useEffect } from 'react';
-import { Appointment, Patient, Doctor } from '../../types';
-import { useClinicStore } from '../../store';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Paper,
+  Grid,
+  MenuItem,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import { 
+  getAppointment, 
+  createAppointment, 
+  updateAppointment,
+  getPatients,
+  getDoctors 
+} from '../../services/supabaseApi';
+import type { Patient, Doctor } from '../../lib/supabase';
 
-interface AppointmentFormProps {
-  appointment?: Appointment;
-  onSave: (appointmentData: Partial<Appointment>) => void;
-  onCancel: () => void;
-}
+const validationSchema = yup.object({
+  patient_id: yup.string().required('Patient is required'),
+  doctor_id: yup.string().required('Doctor is required'),
+  appointment_date: yup.date().required('Date is required'),
+  appointment_time: yup.string().required('Time is required'),
+  reason: yup.string().required('Reason is required'),
+  status: yup.string().required('Status is required'),
+});
 
-const AppointmentForm: React.FC<AppointmentFormProps> = ({
-  appointment,
-  onSave,
-  onCancel,
-}) => {
-  const { patients, doctors } = useClinicStore();
-  const [formData, setFormData] = useState<Partial<Appointment>>({
-    patientId: '',
-    doctorId: '',
-    date: '',
-    time: '',
-    status: 'scheduled',
-    reason: '',
-    notes: '',
+const AppointmentForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = Boolean(id);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+
+  const formik = useFormik({
+    initialValues: {
+      patient_id: '',
+      doctor_id: '',
+      appointment_date: '',
+      appointment_time: '',
+      reason: '',
+      status: 'scheduled',
+      notes: '',
+    },
+    validationSchema: validationSchema,
+    onSubmit: async (values) => {
+      try {
+        setLoading(true);
+        setError('');
+        if (isEdit && id) {
+          await updateAppointment(id, values);
+        } else {
+          await createAppointment(values);
+        }
+        navigate('/appointments');
+      } catch (err) {
+        setError('Failed to save appointment. Please try again later.');
+        console.error('Error saving appointment:', err);
+      } finally {
+        setLoading(false);
+      }
+    },
   });
 
   useEffect(() => {
-    if (appointment) {
-      setFormData(appointment);
-    }
-  }, [appointment]);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [patientsData, doctorsData] = await Promise.all([
+          getPatients(),
+          getDoctors()
+        ]);
+        setPatients(patientsData);
+        setDoctors(doctorsData);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+        if (isEdit && id) {
+          const appointment = await getAppointment(id);
+          formik.setValues({
+            patient_id: appointment.patient_id,
+            doctor_id: appointment.doctor_id,
+            appointment_date: appointment.appointment_date,
+            appointment_time: appointment.appointment_time,
+            reason: appointment.reason,
+            status: appointment.status,
+            notes: appointment.notes || '',
+          });
+        }
+      } catch (err) {
+        setError('Failed to fetch data. Please try again later.');
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
+    fetchData();
+  }, [id, isEdit]);
+
+  if (loading && (patients.length === 0 || doctors.length === 0)) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-        {appointment ? 'Edit Appointment' : 'Schedule New Appointment'}
-      </h2>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          {/* Patient Selection */}
-          <div>
-            <label htmlFor="patientId" className="block text-sm font-medium text-gray-700">
-              Patient
-            </label>
-            <select
-              name="patientId"
-              id="patientId"
-              value={formData.patientId}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Select a patient</option>
-              {patients.map((patient) => (
-                <option key={patient.id} value={patient.id}>
-                  {patient.firstName} {patient.lastName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Doctor Selection */}
-          <div>
-            <label htmlFor="doctorId" className="block text-sm font-medium text-gray-700">
-              Doctor
-            </label>
-            <select
-              name="doctorId"
-              id="doctorId"
-              value={formData.doctorId}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="">Select a doctor</option>
-              {doctors.map((doctor) => (
-                <option key={doctor.id} value={doctor.id}>
-                  Dr. {doctor.firstName} {doctor.lastName} - {doctor.specialization}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Date and Time */}
-          <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700">
-              Date
-            </label>
-            <input
-              type="date"
-              name="date"
-              id="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="time" className="block text-sm font-medium text-gray-700">
-              Time
-            </label>
-            <input
-              type="time"
-              name="time"
-              id="time"
-              value={formData.time}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-              Status
-            </label>
-            <select
-              name="status"
-              id="status"
-              value={formData.status}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            >
-              <option value="scheduled">Scheduled</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="no-show">No Show</option>
-            </select>
-          </div>
-
-          {/* Reason */}
-          <div>
-            <label htmlFor="reason" className="block text-sm font-medium text-gray-700">
-              Reason for Visit
-            </label>
-            <input
-              type="text"
-              name="reason"
-              id="reason"
-              value={formData.reason}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Notes */}
-        <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
-            Notes
-          </label>
-          <textarea
-            name="notes"
-            id="notes"
-            rows={3}
-            value={formData.notes}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-
-        <div className="flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            {appointment ? 'Update Appointment' : 'Schedule Appointment'}
-          </button>
-        </div>
-      </form>
-    </div>
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        {isEdit ? 'Edit Appointment' : 'Schedule New Appointment'}
+      </Typography>
+      <Paper sx={{ p: 3 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        <form onSubmit={formik.handleSubmit}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="patient_id"
+                name="patient_id"
+                select
+                label="Patient"
+                value={formik.values.patient_id}
+                onChange={formik.handleChange}
+                error={formik.touched.patient_id && Boolean(formik.errors.patient_id)}
+                helperText={formik.touched.patient_id && formik.errors.patient_id}
+              >
+                {patients.map((patient) => (
+                  <MenuItem key={patient.id} value={patient.id}>
+                    {patient.first_name} {patient.last_name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="doctor_id"
+                name="doctor_id"
+                select
+                label="Doctor"
+                value={formik.values.doctor_id}
+                onChange={formik.handleChange}
+                error={formik.touched.doctor_id && Boolean(formik.errors.doctor_id)}
+                helperText={formik.touched.doctor_id && formik.errors.doctor_id}
+              >
+                {doctors.map((doctor) => (
+                  <MenuItem key={doctor.id} value={doctor.id}>
+                    Dr. {doctor.first_name} {doctor.last_name} - {doctor.specialization}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="appointment_date"
+                name="appointment_date"
+                label="Date"
+                type="date"
+                value={formik.values.appointment_date}
+                onChange={formik.handleChange}
+                error={formik.touched.appointment_date && Boolean(formik.errors.appointment_date)}
+                helperText={formik.touched.appointment_date && formik.errors.appointment_date}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="appointment_time"
+                name="appointment_time"
+                label="Time"
+                type="time"
+                value={formik.values.appointment_time}
+                onChange={formik.handleChange}
+                error={formik.touched.appointment_time && Boolean(formik.errors.appointment_time)}
+                helperText={formik.touched.appointment_time && formik.errors.appointment_time}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="status"
+                name="status"
+                select
+                label="Status"
+                value={formik.values.status}
+                onChange={formik.handleChange}
+                error={formik.touched.status && Boolean(formik.errors.status)}
+                helperText={formik.touched.status && formik.errors.status}
+              >
+                <MenuItem value="scheduled">Scheduled</MenuItem>
+                <MenuItem value="confirmed">Confirmed</MenuItem>
+                <MenuItem value="in-progress">In Progress</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="cancelled">Cancelled</MenuItem>
+                <MenuItem value="no-show">No Show</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="reason"
+                name="reason"
+                label="Reason for Visit"
+                value={formik.values.reason}
+                onChange={formik.handleChange}
+                error={formik.touched.reason && Boolean(formik.errors.reason)}
+                helperText={formik.touched.reason && formik.errors.reason}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                id="notes"
+                name="notes"
+                label="Notes"
+                multiline
+                rows={3}
+                value={formik.values.notes}
+                onChange={formik.handleChange}
+                error={formik.touched.notes && Boolean(formik.errors.notes)}
+                helperText={formik.touched.notes && formik.errors.notes}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate('/appointments')}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? <CircularProgress size={24} /> : (isEdit ? 'Update' : 'Schedule')}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </form>
+      </Paper>
+    </Box>
   );
 };
 
-export default AppointmentForm; 
+export default AppointmentForm;

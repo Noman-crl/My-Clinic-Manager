@@ -15,7 +15,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TablePagination,
   IconButton,
   Chip,
   MenuItem,
@@ -29,29 +28,9 @@ import {
   Edit as EditIcon,
   Visibility as ViewIcon,
   Cancel as CancelIcon,
-  Schedule as ScheduleIcon,
 } from '@mui/icons-material';
-import { getAppointments, cancelAppointment } from '../../services/api';
-
-interface Appointment {
-  _id: string;
-  patientId: {
-    firstName: string;
-    lastName: string;
-    phone: string;
-  };
-  doctorId: {
-    firstName: string;
-    lastName: string;
-    specialization: string;
-  };
-  date: string;
-  time: string;
-  type: string;
-  reason: string;
-  status: string;
-  priority: string;
-}
+import { getAppointments, deleteAppointment } from '../../services/supabaseApi';
+import type { Appointment } from '../../lib/supabase';
 
 const AppointmentList: React.FC = () => {
   const navigate = useNavigate();
@@ -60,25 +39,16 @@ const AppointmentList: React.FC = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     fetchAppointments();
-  }, [page, rowsPerPage, searchTerm, statusFilter]);
+  }, []);
 
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const response = await getAppointments({
-        page: page + 1,
-        limit: rowsPerPage,
-        search: searchTerm,
-        status: statusFilter,
-      });
-      setAppointments(response.data.appointments || []);
-      setTotalCount(response.data.total || 0);
+      const data = await getAppointments();
+      setAppointments(data);
       setError('');
     } catch (err) {
       setError('Failed to fetch appointments. Please try again later.');
@@ -88,17 +58,14 @@ const AppointmentList: React.FC = () => {
     }
   };
 
-  const handleCancelAppointment = async (id: string) => {
-    if (window.confirm('Are you sure you want to cancel this appointment?')) {
+  const handleDeleteAppointment = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this appointment?')) {
       try {
-        await cancelAppointment(id, {
-          cancelledBy: 'admin',
-          cancellationReason: 'Cancelled by admin'
-        });
+        await deleteAppointment(id);
         fetchAppointments();
       } catch (err) {
-        setError('Failed to cancel appointment. Please try again later.');
-        console.error('Error cancelling appointment:', err);
+        setError('Failed to delete appointment. Please try again later.');
+        console.error('Error deleting appointment:', err);
       }
     }
   };
@@ -122,31 +89,20 @@ const AppointmentList: React.FC = () => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent':
-        return 'error';
-      case 'high':
-        return 'warning';
-      case 'medium':
-        return 'primary';
-      case 'low':
-        return 'default';
-      default:
-        return 'default';
-    }
-  };
+  const filteredAppointments = appointments.filter(appointment => {
+    const matchesSearch = searchTerm === '' || 
+      (appointment.patients && 
+        `${appointment.patients.first_name} ${appointment.patients.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (appointment.doctors && 
+        `${appointment.doctors.first_name} ${appointment.doctors.last_name}`.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      appointment.reason.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === '' || appointment.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  if (loading && appointments.length === 0) {
+  if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
         <CircularProgress />
@@ -215,64 +171,54 @@ const AppointmentList: React.FC = () => {
                 <TableCell>Patient</TableCell>
                 <TableCell>Doctor</TableCell>
                 <TableCell>Date & Time</TableCell>
-                <TableCell>Type</TableCell>
                 <TableCell>Reason</TableCell>
-                <TableCell>Priority</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {appointments.map((appointment) => (
-                <TableRow key={appointment._id} hover>
+              {filteredAppointments.map((appointment) => (
+                <TableRow key={appointment.id} hover>
                   <TableCell>
                     <Box>
                       <Typography variant="subtitle2" fontWeight="bold">
-                        {appointment.patientId.firstName} {appointment.patientId.lastName}
+                        {appointment.patients ? 
+                          `${appointment.patients.first_name} ${appointment.patients.last_name}` : 
+                          'Unknown Patient'
+                        }
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {appointment.patientId.phone}
+                        {appointment.patients?.phone || 'No phone'}
                       </Typography>
                     </Box>
                   </TableCell>
                   <TableCell>
                     <Box>
                       <Typography variant="subtitle2">
-                        Dr. {appointment.doctorId.firstName} {appointment.doctorId.lastName}
+                        {appointment.doctors ? 
+                          `Dr. ${appointment.doctors.first_name} ${appointment.doctors.last_name}` : 
+                          'Unknown Doctor'
+                        }
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {appointment.doctorId.specialization}
+                        {appointment.doctors?.specialization || 'No specialization'}
                       </Typography>
                     </Box>
                   </TableCell>
                   <TableCell>
                     <Box>
                       <Typography variant="body2">
-                        {new Date(appointment.date).toLocaleDateString()}
+                        {new Date(appointment.appointment_date).toLocaleDateString()}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {appointment.time}
+                        {appointment.appointment_time}
                       </Typography>
                     </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={appointment.type}
-                      size="small"
-                      variant="outlined"
-                    />
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" noWrap sx={{ maxWidth: 150 }}>
                       {appointment.reason}
                     </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={appointment.priority}
-                      size="small"
-                      color={getPriorityColor(appointment.priority) as any}
-                    />
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -285,14 +231,14 @@ const AppointmentList: React.FC = () => {
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <IconButton
                         size="small"
-                        onClick={() => navigate(`/appointments/${appointment._id}`)}
+                        onClick={() => navigate(`/appointments/${appointment.id}`)}
                         color="primary"
                       >
                         <ViewIcon />
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => navigate(`/appointments/${appointment._id}`)}
+                        onClick={() => navigate(`/appointments/${appointment.id}`)}
                         color="success"
                       >
                         <EditIcon />
@@ -300,7 +246,7 @@ const AppointmentList: React.FC = () => {
                       {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
                         <IconButton
                           size="small"
-                          onClick={() => handleCancelAppointment(appointment._id)}
+                          onClick={() => handleDeleteAppointment(appointment.id)}
                           color="error"
                         >
                           <CancelIcon />
@@ -313,15 +259,6 @@ const AppointmentList: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={totalCount}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
       </Paper>
     </Box>
   );

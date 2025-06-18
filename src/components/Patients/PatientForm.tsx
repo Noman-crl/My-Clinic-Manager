@@ -1,241 +1,276 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, ArrowLeft } from 'lucide-react';
-import { Patient } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Paper,
+  Grid,
+  MenuItem,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import { getPatient, createPatient, updatePatient } from '../../services/supabaseApi';
 
-interface PatientFormProps {
-  patient?: Patient;
-  onSave: (patientData: Partial<Patient>) => void;
-  onCancel: () => void;
-}
+const validationSchema = yup.object({
+  first_name: yup.string().required('First name is required'),
+  last_name: yup.string().required('Last name is required'),
+  email: yup.string().email('Enter a valid email').required('Email is required'),
+  phone: yup.string().required('Phone number is required'),
+  date_of_birth: yup.date().required('Date of birth is required'),
+  gender: yup.string().required('Gender is required'),
+  address: yup.string().required('Address is required'),
+  emergency_contact: yup.string().required('Emergency contact is required'),
+  emergency_phone: yup.string().required('Emergency phone is required'),
+});
 
-const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) => {
-  const [formData, setFormData] = useState<Partial<Patient>>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    dateOfBirth: '',
-    gender: 'male',
-    address: '',
-    emergencyContact: '',
-    emergencyPhone: '',
-    insuranceNumber: '',
+const PatientForm: React.FC = () => {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = Boolean(id);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const formik = useFormik({
+    initialValues: {
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      date_of_birth: '',
+      gender: 'male',
+      address: '',
+      emergency_contact: '',
+      emergency_phone: '',
+      insurance_number: '',
+    },
+    validationSchema: validationSchema,
+    onSubmit: async (values) => {
+      try {
+        setLoading(true);
+        setError('');
+        if (isEdit && id) {
+          await updatePatient(id, values);
+        } else {
+          await createPatient(values);
+        }
+        navigate('/patients');
+      } catch (err) {
+        setError('Failed to save patient. Please try again later.');
+        console.error('Error saving patient:', err);
+      } finally {
+        setLoading(false);
+      }
+    },
   });
 
   useEffect(() => {
-    if (patient) {
-      setFormData(patient);
-    }
-  }, [patient]);
+    const fetchPatient = async () => {
+      if (isEdit && id) {
+        try {
+          setLoading(true);
+          const patient = await getPatient(id);
+          formik.setValues({
+            first_name: patient.first_name,
+            last_name: patient.last_name,
+            email: patient.email,
+            phone: patient.phone,
+            date_of_birth: patient.date_of_birth,
+            gender: patient.gender,
+            address: patient.address,
+            emergency_contact: patient.emergency_contact,
+            emergency_phone: patient.emergency_phone,
+            insurance_number: patient.insurance_number || '',
+          });
+        } catch (err) {
+          setError('Failed to fetch patient details. Please try again later.');
+          console.error('Error fetching patient:', err);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+    fetchPatient();
+  }, [id, isEdit]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
+  if (loading && isEdit) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onCancel}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
-          </button>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {patient ? 'Edit Patient' : 'Add New Patient'}
-          </h1>
-        </div>
-      </div>
-
-      {/* Form */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-                First Name
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                id="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        {isEdit ? 'Edit Patient' : 'Add New Patient'}
+      </Typography>
+      <Paper sx={{ p: 3 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        <form onSubmit={formik.handleSubmit}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="first_name"
+                name="first_name"
+                label="First Name"
+                value={formik.values.first_name}
+                onChange={formik.handleChange}
+                error={formik.touched.first_name && Boolean(formik.errors.first_name)}
+                helperText={formik.touched.first_name && formik.errors.first_name}
               />
-            </div>
-
-            <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                id="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="last_name"
+                name="last_name"
+                label="Last Name"
+                value={formik.values.last_name}
+                onChange={formik.handleChange}
+                error={formik.touched.last_name && Boolean(formik.errors.last_name)}
+                helperText={formik.touched.last_name && formik.errors.last_name}
               />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
                 id="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                name="email"
+                label="Email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                error={formik.touched.email && Boolean(formik.errors.email)}
+                helperText={formik.touched.email && formik.errors.email}
               />
-            </div>
-
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone
-              </label>
-              <input
-                type="tel"
-                name="phone"
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
                 id="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                name="phone"
+                label="Phone"
+                value={formik.values.phone}
+                onChange={formik.handleChange}
+                error={formik.touched.phone && Boolean(formik.errors.phone)}
+                helperText={formik.touched.phone && formik.errors.phone}
               />
-            </div>
-
-            <div>
-              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
-                Date of Birth
-              </label>
-              <input
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="date_of_birth"
+                name="date_of_birth"
+                label="Date of Birth"
                 type="date"
-                name="dateOfBirth"
-                id="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                value={formik.values.date_of_birth}
+                onChange={formik.handleChange}
+                error={formik.touched.date_of_birth && Boolean(formik.errors.date_of_birth)}
+                helperText={formik.touched.date_of_birth && formik.errors.date_of_birth}
+                InputLabelProps={{
+                  shrink: true,
+                }}
               />
-            </div>
-
-            <div>
-              <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
-                Gender
-              </label>
-              <select
-                name="gender"
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
                 id="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                name="gender"
+                select
+                label="Gender"
+                value={formik.values.gender}
+                onChange={formik.handleChange}
+                error={formik.touched.gender && Boolean(formik.errors.gender)}
+                helperText={formik.touched.gender && formik.errors.gender}
               >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-
-            <div className="sm:col-span-2">
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                Address
-              </label>
-              <input
-                type="text"
-                name="address"
+                <MenuItem value="male">Male</MenuItem>
+                <MenuItem value="female">Female</MenuItem>
+                <MenuItem value="other">Other</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
                 id="address"
-                value={formData.address}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                name="address"
+                label="Address"
+                multiline
+                rows={3}
+                value={formik.values.address}
+                onChange={formik.handleChange}
+                error={formik.touched.address && Boolean(formik.errors.address)}
+                helperText={formik.touched.address && formik.errors.address}
               />
-            </div>
-
-            <div>
-              <label htmlFor="emergencyContact" className="block text-sm font-medium text-gray-700">
-                Emergency Contact Name
-              </label>
-              <input
-                type="text"
-                name="emergencyContact"
-                id="emergencyContact"
-                value={formData.emergencyContact}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="emergency_contact"
+                name="emergency_contact"
+                label="Emergency Contact Name"
+                value={formik.values.emergency_contact}
+                onChange={formik.handleChange}
+                error={formik.touched.emergency_contact && Boolean(formik.errors.emergency_contact)}
+                helperText={formik.touched.emergency_contact && formik.errors.emergency_contact}
               />
-            </div>
-
-            <div>
-              <label htmlFor="emergencyPhone" className="block text-sm font-medium text-gray-700">
-                Emergency Contact Phone
-              </label>
-              <input
-                type="tel"
-                name="emergencyPhone"
-                id="emergencyPhone"
-                value={formData.emergencyPhone}
-                onChange={handleChange}
-                required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                id="emergency_phone"
+                name="emergency_phone"
+                label="Emergency Contact Phone"
+                value={formik.values.emergency_phone}
+                onChange={formik.handleChange}
+                error={formik.touched.emergency_phone && Boolean(formik.errors.emergency_phone)}
+                helperText={formik.touched.emergency_phone && formik.errors.emergency_phone}
               />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label htmlFor="insuranceNumber" className="block text-sm font-medium text-gray-700">
-                Insurance Number
-              </label>
-              <input
-                type="text"
-                name="insuranceNumber"
-                id="insuranceNumber"
-                value={formData.insuranceNumber}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                id="insurance_number"
+                name="insurance_number"
+                label="Insurance Number (Optional)"
+                value={formik.values.insurance_number}
+                onChange={formik.handleChange}
+                error={formik.touched.insurance_number && Boolean(formik.errors.insurance_number)}
+                helperText={formik.touched.insurance_number && formik.errors.insurance_number}
               />
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center space-x-2"
-            >
-              <X className="h-4 w-4" />
-              <span>Cancel</span>
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2"
-            >
-              <Save className="h-4 w-4" />
-              <span>{patient ? 'Update Patient' : 'Add Patient'}</span>
-            </button>
-          </div>
+            </Grid>
+            <Grid item xs={12}>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate('/patients')}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={loading}
+                >
+                  {loading ? <CircularProgress size={24} /> : (isEdit ? 'Update' : 'Save')}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
         </form>
-      </div>
-    </div>
+      </Paper>
+    </Box>
   );
 };
 
