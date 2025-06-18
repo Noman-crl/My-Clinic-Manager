@@ -1,47 +1,109 @@
 const mongoose = require('mongoose');
 
-const invoiceItemSchema = new mongoose.Schema({
-  description: { type: String, required: true },
-  quantity: { type: Number, required: true, default: 1 },
-  unitPrice: { type: Number, required: true },
-  total: { type: Number, required: true }
+const invoiceSchema = new mongoose.Schema({
+  invoiceNumber: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  patient: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Patient',
+    required: true
+  },
+  doctor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Doctor',
+    required: true
+  },
+  appointment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Appointment'
+  },
+  issueDate: {
+    type: Date,
+    required: true,
+    default: Date.now
+  },
+  dueDate: {
+    type: Date,
+    required: true
+  },
+  items: [{
+    description: {
+      type: String,
+      required: true
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    unitPrice: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    total: {
+      type: Number,
+      required: true,
+      min: 0
+    }
+  }],
+  subtotal: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  tax: {
+    rate: {
+      type: Number,
+      default: 0
+    },
+    amount: {
+      type: Number,
+      default: 0
+    }
+  },
+  discount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  totalAmount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  paidAmount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  balanceAmount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  status: {
+    type: String,
+    enum: ['draft', 'sent', 'paid', 'partially-paid', 'overdue', 'cancelled'],
+    default: 'draft'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['cash', 'card', 'bank-transfer', 'insurance', 'other']
+  },
+  paymentDate: Date,
+  notes: String
+}, {
+  timestamps: true
 });
 
-const invoiceSchema = new mongoose.Schema({
-  invoiceNumber: { type: String, required: true, unique: true },
-  patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', required: true },
-  appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
-  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
-  date: { type: Date, required: true, default: Date.now },
-  dueDate: { type: Date, required: true },
-  items: [invoiceItemSchema],
-  subtotal: { type: Number, required: true },
-  taxRate: { type: Number, default: 0 }, // percentage
-  taxAmount: { type: Number, default: 0 },
-  discountAmount: { type: Number, default: 0 },
-  total: { type: Number, required: true },
-  status: { 
-    type: String, 
-    enum: ['draft', 'sent', 'pending', 'paid', 'overdue', 'cancelled'], 
-    default: 'draft' 
-  },
-  paymentMethod: String,
-  paidAt: Date,
-  paidAmount: { type: Number, default: 0 },
-  notes: String,
-  insuranceClaim: {
-    claimNumber: String,
-    insuranceProvider: String,
-    claimAmount: Number,
-    claimStatus: { type: String, enum: ['pending', 'approved', 'denied', 'processing'] },
-    claimDate: Date
-  }
-}, { timestamps: true });
-
-// Auto-generate invoice number
+// Generate invoice number before saving
 invoiceSchema.pre('save', async function(next) {
   if (!this.invoiceNumber) {
-    const count = await mongoose.model('Invoice').countDocuments();
+    const count = await this.constructor.countDocuments();
     this.invoiceNumber = `INV-${String(count + 1).padStart(6, '0')}`;
   }
   next();
