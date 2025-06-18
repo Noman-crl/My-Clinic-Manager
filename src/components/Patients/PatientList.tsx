@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
   Typography,
   Paper,
-  CircularProgress,
-  Alert,
   TextField,
   InputAdornment,
   Table,
@@ -27,45 +25,44 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon,
 } from '@mui/icons-material';
-import { getPatients, deletePatient } from '../../services/supabaseApi';
-import type { Patient } from '../../lib/supabase';
+
+// Mock data for demo
+const mockPatients = [
+  {
+    id: '1',
+    first_name: 'Alice',
+    last_name: 'Brown',
+    email: 'alice.brown@email.com',
+    phone: '+1-555-0201',
+    date_of_birth: '1985-03-15',
+    gender: 'female',
+    insurance_number: 'INS001',
+  },
+  {
+    id: '2',
+    first_name: 'Michael',
+    last_name: 'Davis',
+    email: 'michael.davis@email.com',
+    phone: '+1-555-0203',
+    date_of_birth: '1978-07-22',
+    gender: 'male',
+    insurance_number: 'INS002',
+  },
+  {
+    id: '3',
+    first_name: 'Emma',
+    last_name: 'Thompson',
+    email: 'emma.thompson@email.com',
+    phone: '+1-555-0205',
+    date_of_birth: '2010-12-08',
+    gender: 'female',
+    insurance_number: 'INS003',
+  },
+];
 
 const PatientList: React.FC = () => {
   const navigate = useNavigate();
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-
-  useEffect(() => {
-    fetchPatients();
-  }, []);
-
-  const fetchPatients = async () => {
-    try {
-      setLoading(true);
-      const data = await getPatients();
-      setPatients(data);
-      setError('');
-    } catch (err) {
-      setError('Failed to fetch patients. Please try again later.');
-      console.error('Error fetching patients:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeletePatient = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this patient?')) {
-      try {
-        await deletePatient(id);
-        fetchPatients(); // Refresh the list
-      } catch (err) {
-        setError('Failed to delete patient. Please try again later.');
-        console.error('Error deleting patient:', err);
-      }
-    }
-  };
 
   const calculateAge = (dateOfBirth: string) => {
     const today = new Date();
@@ -78,19 +75,11 @@ const PatientList: React.FC = () => {
     return age;
   };
 
-  const filteredPatients = patients.filter(patient =>
+  const filteredPatients = mockPatients.filter(patient =>
     `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.phone.includes(searchTerm)
   );
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
     <Box>
@@ -104,12 +93,6 @@ const PatientList: React.FC = () => {
           Add Patient
         </Button>
       </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
 
       <Paper sx={{ mb: 2, p: 2 }}>
         <TextField
@@ -149,7 +132,7 @@ const PatientList: React.FC = () => {
                         {patient.first_name} {patient.last_name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        ID: {patient.id.slice(-6)}
+                        ID: {patient.id}
                       </Typography>
                     </Box>
                   </TableCell>
@@ -200,7 +183,6 @@ const PatientList: React.FC = () => {
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => handleDeletePatient(patient.id)}
                         color="error"
                       >
                         <DeleteIcon />

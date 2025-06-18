@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../App';
 import {
   Box,
   Paper,
@@ -13,6 +14,7 @@ import {
 import { Login as LoginIcon } from '@mui/icons-material';
 
 const SignIn: React.FC = () => {
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('admin@admin.com');
   const [password, setPassword] = useState('Admin');
@@ -25,14 +27,12 @@ const SignIn: React.FC = () => {
     setLoading(true);
     
     try {
-      // Simulate login
-      setTimeout(() => {
-        setLoading(false);
-        navigate('/dashboard');
-      }, 1000);
+      await login(email, password);
+      navigate('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
       setError('Login failed. Please check your credentials.');
+    } finally {
       setLoading(false);
     }
   };

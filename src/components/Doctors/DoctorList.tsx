@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
   Typography,
   Paper,
-  CircularProgress,
-  Alert,
   TextField,
   InputAdornment,
   Table,
@@ -27,60 +25,57 @@ import {
   Phone as PhoneIcon,
   Email as EmailIcon,
 } from '@mui/icons-material';
-import { getDoctors, deleteDoctor } from '../../services/supabaseApi';
-import type { Doctor } from '../../lib/supabase';
+
+// Mock data for demo
+const mockDoctors = [
+  {
+    id: '1',
+    first_name: 'John',
+    last_name: 'Smith',
+    email: 'john.smith@clinic.com',
+    phone: '+1-555-0101',
+    specialization: 'Cardiology',
+    license_number: 'MD001',
+    experience: 15,
+    consultation_fee: 200,
+    is_active: true,
+  },
+  {
+    id: '2',
+    first_name: 'Sarah',
+    last_name: 'Johnson',
+    email: 'sarah.johnson@clinic.com',
+    phone: '+1-555-0102',
+    specialization: 'Pediatrics',
+    license_number: 'MD002',
+    experience: 12,
+    consultation_fee: 180,
+    is_active: true,
+  },
+  {
+    id: '3',
+    first_name: 'Michael',
+    last_name: 'Brown',
+    email: 'michael.brown@clinic.com',
+    phone: '+1-555-0103',
+    specialization: 'Orthopedics',
+    license_number: 'MD003',
+    experience: 18,
+    consultation_fee: 250,
+    is_active: true,
+  },
+];
 
 const DoctorList: React.FC = () => {
   const navigate = useNavigate();
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchDoctors();
-  }, []);
-
-  const fetchDoctors = async () => {
-    try {
-      setLoading(true);
-      const data = await getDoctors();
-      setDoctors(data);
-      setError('');
-    } catch (err) {
-      setError('Failed to fetch doctors. Please try again later.');
-      console.error('Error fetching doctors:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteDoctor = async (id: string) => {
-    if (window.confirm('Are you sure you want to deactivate this doctor?')) {
-      try {
-        await deleteDoctor(id);
-        fetchDoctors(); // Refresh the list
-      } catch (err) {
-        setError('Failed to deactivate doctor. Please try again later.');
-        console.error('Error deactivating doctor:', err);
-      }
-    }
-  };
-
-  const filteredDoctors = doctors.filter(doctor =>
+  const filteredDoctors = mockDoctors.filter(doctor =>
     `${doctor.first_name} ${doctor.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     doctor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
     doctor.license_number.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
     <Box>
@@ -94,12 +89,6 @@ const DoctorList: React.FC = () => {
           Add Doctor
         </Button>
       </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
 
       <Paper sx={{ mb: 2, p: 2 }}>
         <TextField
@@ -190,7 +179,6 @@ const DoctorList: React.FC = () => {
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => handleDeleteDoctor(doctor.id)}
                         color="error"
                       >
                         <DeleteIcon />

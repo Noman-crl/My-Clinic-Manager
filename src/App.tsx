@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -28,34 +28,61 @@ const theme = createTheme({
   },
 });
 
-// Simple auth state management
-const useAuth = () => {
-  const [user, setUser] = React.useState<any>(null);
-  const [loading, setLoading] = React.useState(false);
+// Auth Context
+interface AuthContextType {
+  user: any;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
-    // Simulate login - in real app this would call Supabase
-    setTimeout(() => {
-      setUser({ email, name: 'Demo User' });
-      setLoading(false);
-    }, 1000);
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setUser({ email, name: 'Demo User' });
+        setLoading(false);
+        resolve();
+      }, 1000);
+    });
   };
 
   const register = async (name: string, email: string, password: string) => {
     setLoading(true);
-    setTimeout(() => {
-      setUser({ email, name });
-      setLoading(false);
-    }, 1000);
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        setUser({ email, name });
+        setLoading(false);
+        resolve();
+      }, 1000);
+    });
   };
 
   const logout = () => {
     setUser(null);
   };
 
-  return { user, loading, login, register, logout };
+  return (
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
   const { user, loading } = useAuth();
@@ -91,135 +118,137 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<PublicHome />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Patient Routes */}
-          <Route
-            path="/patients"
-            element={
-              <ProtectedRoute>
-                <PatientList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/patients/new"
-            element={
-              <ProtectedRoute>
-                <PatientForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/patients/:id"
-            element={
-              <ProtectedRoute>
-                <PatientForm />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Doctor Routes */}
-          <Route
-            path="/doctors"
-            element={
-              <ProtectedRoute>
-                <DoctorList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/doctors/new"
-            element={
-              <ProtectedRoute>
-                <DoctorForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/doctors/:id"
-            element={
-              <ProtectedRoute>
-                <DoctorForm />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Appointment Routes */}
-          <Route
-            path="/appointments"
-            element={
-              <ProtectedRoute>
-                <AppointmentList />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/appointments/new"
-            element={
-              <ProtectedRoute>
-                <AppointmentForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/appointments/:id"
-            element={
-              <ProtectedRoute>
-                <AppointmentForm />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Medical Records Routes */}
-          <Route
-            path="/medical-records"
-            element={
-              <ProtectedRoute>
-                <MedicalRecordsList />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Billing Routes */}
-          <Route
-            path="/billing"
-            element={
-              <ProtectedRoute>
-                <BillingList />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Reports Routes */}
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <Reports />
-              </ProtectedRoute>
-            }
-          />
-          
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<PublicHome />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Patient Routes */}
+            <Route
+              path="/patients"
+              element={
+                <ProtectedRoute>
+                  <PatientList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patients/new"
+              element={
+                <ProtectedRoute>
+                  <PatientForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patients/:id"
+              element={
+                <ProtectedRoute>
+                  <PatientForm />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Doctor Routes */}
+            <Route
+              path="/doctors"
+              element={
+                <ProtectedRoute>
+                  <DoctorList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/doctors/new"
+              element={
+                <ProtectedRoute>
+                  <DoctorForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/doctors/:id"
+              element={
+                <ProtectedRoute>
+                  <DoctorForm />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Appointment Routes */}
+            <Route
+              path="/appointments"
+              element={
+                <ProtectedRoute>
+                  <AppointmentList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/appointments/new"
+              element={
+                <ProtectedRoute>
+                  <AppointmentForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/appointments/:id"
+              element={
+                <ProtectedRoute>
+                  <AppointmentForm />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Medical Records Routes */}
+            <Route
+              path="/medical-records"
+              element={
+                <ProtectedRoute>
+                  <MedicalRecordsList />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Billing Routes */}
+            <Route
+              path="/billing"
+              element={
+                <ProtectedRoute>
+                  <BillingList />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Reports Routes */}
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 };
