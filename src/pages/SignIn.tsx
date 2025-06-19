@@ -6,8 +6,8 @@ import { Heart, Eye, EyeOff } from 'lucide-react';
 const SignIn: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@admin.com');
-  const [password, setPassword] = useState('Admin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,14 +18,36 @@ const SignIn: React.FC = () => {
     setLoading(true);
     
     try {
+      console.log('SignIn: Attempting login with:', email);
       await login(email, password);
+      console.log('SignIn: Login successful, navigating to dashboard');
       navigate('/dashboard');
     } catch (err: any) {
-      console.error('Login error:', err);
-      setError(err.message || 'Login failed. Please check your credentials.');
+      console.error('SignIn: Login error:', err);
+      
+      let errorMessage = 'Login failed. Please check your credentials.';
+      
+      if (err.message) {
+        if (err.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please try again.';
+        } else if (err.message.includes('Email not confirmed')) {
+          errorMessage = 'Please check your email and confirm your account.';
+        } else if (err.message.includes('Too many requests')) {
+          errorMessage = 'Too many login attempts. Please try again later.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDemoLogin = () => {
+    setEmail('admin@admin.com');
+    setPassword('Admin123!');
   };
 
   return (
@@ -158,7 +180,8 @@ const SignIn: React.FC = () => {
               cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              marginBottom: '1rem'
             }}
           >
             {loading ? (
@@ -181,16 +204,29 @@ const SignIn: React.FC = () => {
         </form>
         
         <div style={{
-          marginTop: '1.5rem',
+          marginTop: '1rem',
           padding: '1rem',
           backgroundColor: '#f1f5f9',
           borderRadius: '0.375rem',
           fontSize: '0.75rem',
           textAlign: 'center'
         }}>
-          <strong>Demo Credentials:</strong><br />
-          Email: admin@admin.com<br />
-          Password: Admin
+          <strong>Demo Account:</strong><br />
+          <button
+            onClick={handleDemoLogin}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#3b82f6',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+              marginTop: '0.25rem'
+            }}
+          >
+            Click here to fill demo credentials
+          </button><br />
+          <small>Or create a new account below</small>
         </div>
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>

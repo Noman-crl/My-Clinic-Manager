@@ -19,14 +19,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+        } else {
+          console.log('Initial session:', session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Error in getInitialSession:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session);
         setUser(session?.user ?? null);
         setLoading(false);
       }
@@ -38,10 +52,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { user } = await signIn(email, password);
-      setUser(user);
+      console.log('AuthContext: Attempting login for:', email);
+      
+      const { user: authUser } = await signIn(email, password);
+      console.log('AuthContext: Login successful:', authUser);
+      
+      setUser(authUser);
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('AuthContext: Login error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -51,10 +69,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string) => {
     try {
       setLoading(true);
-      const { user } = await signUp(email, password, { name });
-      setUser(user);
+      console.log('AuthContext: Attempting registration for:', email);
+      
+      const { user: authUser } = await signUp(email, password, { name });
+      console.log('AuthContext: Registration successful:', authUser);
+      
+      setUser(authUser);
     } catch (error) {
-      console.error('Register error:', error);
+      console.error('AuthContext: Registration error:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -63,10 +85,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      console.log('AuthContext: Attempting logout');
       await signOut();
       setUser(null);
+      console.log('AuthContext: Logout successful');
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('AuthContext: Logout error:', error);
       throw error;
     }
   };
