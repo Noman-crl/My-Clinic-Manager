@@ -25,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) {
           console.error('Error getting session:', error);
         } else {
-          console.log('Initial session:', session);
+          console.log('Initial session:', session?.user ? 'User logged in' : 'No user');
           setUser(session?.user ?? null);
         }
       } catch (error) {
@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
+        console.log('Auth state changed:', event, session?.user ? 'User present' : 'No user');
         setUser(session?.user ?? null);
         setLoading(false);
       }
@@ -55,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Attempting login for:', email);
       
       const { user: authUser } = await signIn(email, password);
-      console.log('AuthContext: Login successful:', authUser);
+      console.log('AuthContext: Login successful');
       
       setUser(authUser);
     } catch (error) {
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('AuthContext: Attempting registration for:', email);
       
       const { user: authUser } = await signUp(email, password, { name });
-      console.log('AuthContext: Registration successful:', authUser);
+      console.log('AuthContext: Registration successful');
       
       setUser(authUser);
     } catch (error) {

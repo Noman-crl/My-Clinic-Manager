@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Heart, Eye, EyeOff } from 'lucide-react';
+import { Heart, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 const SignIn: React.FC = () => {
   const { login } = useAuth();
@@ -29,7 +29,7 @@ const SignIn: React.FC = () => {
       
       if (err.message) {
         if (err.message.includes('Invalid login credentials')) {
-          errorMessage = 'Invalid email or password. Please try again.';
+          errorMessage = 'Invalid email or password. Please try again or create a new account.';
         } else if (err.message.includes('Email not confirmed')) {
           errorMessage = 'Please check your email and confirm your account.';
         } else if (err.message.includes('Too many requests')) {
@@ -45,9 +45,8 @@ const SignIn: React.FC = () => {
     }
   };
 
-  const handleDemoLogin = () => {
-    setEmail('admin@admin.com');
-    setPassword('Admin123!');
+  const handleCreateDemoAccount = () => {
+    navigate('/signup?demo=true');
   };
 
   return (
@@ -87,8 +86,12 @@ const SignIn: React.FC = () => {
             padding: '0.75rem',
             borderRadius: '0.375rem',
             marginBottom: '1rem',
-            fontSize: '0.875rem'
+            fontSize: '0.875rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}>
+            <AlertCircle size={16} />
             {error}
           </div>
         )}
@@ -208,30 +211,37 @@ const SignIn: React.FC = () => {
           padding: '1rem',
           backgroundColor: '#f1f5f9',
           borderRadius: '0.375rem',
-          fontSize: '0.75rem',
+          fontSize: '0.875rem',
           textAlign: 'center'
         }}>
-          <strong>Demo Account:</strong><br />
+          <div style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#1e293b' }}>No account yet?</strong>
+          </div>
           <button
-            onClick={handleDemoLogin}
+            onClick={handleCreateDemoAccount}
             style={{
-              background: 'none',
+              width: '100%',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#10b981',
+              color: 'white',
               border: 'none',
-              color: '#3b82f6',
-              textDecoration: 'underline',
+              borderRadius: '0.375rem',
               cursor: 'pointer',
-              fontSize: '0.75rem',
-              marginTop: '0.25rem'
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              marginBottom: '0.5rem'
             }}
           >
-            Click here to fill demo credentials
-          </button><br />
-          <small>Or create a new account below</small>
+            Create Demo Account
+          </button>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+            This will create a demo admin account for testing
+          </div>
         </div>
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
           <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            Don't have an account?{' '}
+            Want to create your own account?{' '}
           </span>
           <Link
             to="/signup"
@@ -242,7 +252,7 @@ const SignIn: React.FC = () => {
               fontWeight: '500'
             }}
           >
-            Sign up
+            Sign up here
           </Link>
         </div>
       </div>
