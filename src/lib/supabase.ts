@@ -3,11 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-console.log('Supabase URL:', supabaseUrl);
-console.log('Supabase Anon Key:', supabaseAnonKey ? 'Present' : 'Missing');
+console.log('Supabase Configuration:');
+console.log('- URL:', supabaseUrl ? 'Present' : 'Missing');
+console.log('- Anon Key:', supabaseAnonKey ? 'Present' : 'Missing');
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:');
+  console.error('❌ Missing Supabase environment variables:');
   console.error('VITE_SUPABASE_URL:', supabaseUrl);
   console.error('VITE_SUPABASE_ANON_KEY:', supabaseAnonKey ? 'Present' : 'Missing');
   throw new Error('Missing Supabase environment variables. Please check your .env file.');
@@ -21,12 +22,29 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 });
 
-// Test the connection
+// Test the connection and log detailed information
 supabase.auth.getSession().then(({ data, error }) => {
   if (error) {
-    console.error('Supabase connection error:', error);
+    console.error('❌ Supabase connection error:', error);
   } else {
-    console.log('Supabase connected successfully');
+    console.log('✅ Supabase connected successfully');
+    console.log('- Session:', data.session ? 'Active' : 'None');
+    console.log('- User:', data.session?.user?.email || 'Not logged in');
+  }
+});
+
+// Test database connectivity
+supabase.from('patients').select('count', { count: 'exact', head: true }).then(({ error, count }) => {
+  if (error) {
+    console.error('❌ Database connection error:', error);
+    console.error('This might indicate:');
+    console.error('1. RLS policies are not set up correctly');
+    console.error('2. Tables do not exist');
+    console.error('3. Invalid credentials');
+  } else {
+    console.log('✅ Database connected successfully');
+    console.log('- Patients table accessible');
+    console.log('- Current patient count:', count || 0);
   }
 });
 

@@ -4,11 +4,14 @@ import type { Patient, Doctor, Appointment, MedicalRecord, Invoice } from '../li
 // Auth functions
 export const signUp = async (email: string, password: string, userData: any) => {
   try {
+    console.log('SignUp API: Attempting to create user:', email);
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: userData
+        data: userData,
+        emailRedirectTo: undefined // Disable email confirmation for demo
       }
     });
     
@@ -17,6 +20,7 @@ export const signUp = async (email: string, password: string, userData: any) => 
       throw error;
     }
     
+    console.log('SignUp API: User created successfully');
     return data;
   } catch (error) {
     console.error('SignUp function error:', error);
@@ -26,7 +30,7 @@ export const signUp = async (email: string, password: string, userData: any) => 
 
 export const signIn = async (email: string, password: string) => {
   try {
-    console.log('Attempting to sign in with:', email);
+    console.log('SignIn API: Attempting to sign in:', email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -38,7 +42,7 @@ export const signIn = async (email: string, password: string) => {
       throw error;
     }
     
-    console.log('Sign in successful:', data);
+    console.log('SignIn API: Sign in successful');
     return data;
   } catch (error) {
     console.error('SignIn function error:', error);
@@ -48,11 +52,13 @@ export const signIn = async (email: string, password: string) => {
 
 export const signOut = async () => {
   try {
+    console.log('SignOut API: Attempting to sign out');
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Supabase signOut error:', error);
       throw error;
     }
+    console.log('SignOut API: Sign out successful');
   } catch (error) {
     console.error('SignOut function error:', error);
     throw error;
@@ -76,6 +82,7 @@ export const getCurrentUser = async () => {
 // Patient functions
 export const getPatients = async () => {
   try {
+    console.log('API: Fetching patients...');
     const { data, error } = await supabase
       .from('patients')
       .select('*')
@@ -83,9 +90,10 @@ export const getPatients = async () => {
     
     if (error) {
       console.error('Error fetching patients:', error);
-      throw error;
+      throw new Error(`Failed to fetch patients: ${error.message}`);
     }
     
+    console.log('API: Patients fetched successfully:', data?.length || 0);
     return data || [];
   } catch (error) {
     console.error('GetPatients function error:', error);
@@ -95,6 +103,7 @@ export const getPatients = async () => {
 
 export const getPatient = async (id: string) => {
   try {
+    console.log('API: Fetching patient:', id);
     const { data, error } = await supabase
       .from('patients')
       .select('*')
@@ -103,9 +112,10 @@ export const getPatient = async (id: string) => {
     
     if (error) {
       console.error('Error fetching patient:', error);
-      throw error;
+      throw new Error(`Failed to fetch patient: ${error.message}`);
     }
     
+    console.log('API: Patient fetched successfully');
     return data;
   } catch (error) {
     console.error('GetPatient function error:', error);
@@ -115,6 +125,13 @@ export const getPatient = async (id: string) => {
 
 export const createPatient = async (patient: Omit<Patient, 'id' | 'created_at' | 'updated_at'>) => {
   try {
+    console.log('API: Creating patient:', patient.email);
+    
+    // Validate required fields
+    if (!patient.first_name || !patient.last_name || !patient.email) {
+      throw new Error('First name, last name, and email are required');
+    }
+    
     const { data, error } = await supabase
       .from('patients')
       .insert([patient])
@@ -123,9 +140,13 @@ export const createPatient = async (patient: Omit<Patient, 'id' | 'created_at' |
     
     if (error) {
       console.error('Error creating patient:', error);
-      throw error;
+      if (error.code === '23505') {
+        throw new Error('A patient with this email already exists');
+      }
+      throw new Error(`Failed to create patient: ${error.message}`);
     }
     
+    console.log('API: Patient created successfully');
     return data;
   } catch (error) {
     console.error('CreatePatient function error:', error);
@@ -135,6 +156,8 @@ export const createPatient = async (patient: Omit<Patient, 'id' | 'created_at' |
 
 export const updatePatient = async (id: string, updates: Partial<Patient>) => {
   try {
+    console.log('API: Updating patient:', id);
+    
     const { data, error } = await supabase
       .from('patients')
       .update(updates)
@@ -144,9 +167,13 @@ export const updatePatient = async (id: string, updates: Partial<Patient>) => {
     
     if (error) {
       console.error('Error updating patient:', error);
-      throw error;
+      if (error.code === '23505') {
+        throw new Error('A patient with this email already exists');
+      }
+      throw new Error(`Failed to update patient: ${error.message}`);
     }
     
+    console.log('API: Patient updated successfully');
     return data;
   } catch (error) {
     console.error('UpdatePatient function error:', error);
@@ -156,6 +183,8 @@ export const updatePatient = async (id: string, updates: Partial<Patient>) => {
 
 export const deletePatient = async (id: string) => {
   try {
+    console.log('API: Deleting patient:', id);
+    
     const { error } = await supabase
       .from('patients')
       .delete()
@@ -163,8 +192,10 @@ export const deletePatient = async (id: string) => {
     
     if (error) {
       console.error('Error deleting patient:', error);
-      throw error;
+      throw new Error(`Failed to delete patient: ${error.message}`);
     }
+    
+    console.log('API: Patient deleted successfully');
   } catch (error) {
     console.error('DeletePatient function error:', error);
     throw error;
@@ -174,17 +205,18 @@ export const deletePatient = async (id: string) => {
 // Doctor functions
 export const getDoctors = async () => {
   try {
+    console.log('API: Fetching doctors...');
     const { data, error } = await supabase
       .from('doctors')
       .select('*')
-      .eq('is_active', true)
       .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Error fetching doctors:', error);
-      throw error;
+      throw new Error(`Failed to fetch doctors: ${error.message}`);
     }
     
+    console.log('API: Doctors fetched successfully:', data?.length || 0);
     return data || [];
   } catch (error) {
     console.error('GetDoctors function error:', error);
@@ -194,6 +226,7 @@ export const getDoctors = async () => {
 
 export const getDoctor = async (id: string) => {
   try {
+    console.log('API: Fetching doctor:', id);
     const { data, error } = await supabase
       .from('doctors')
       .select('*')
@@ -202,9 +235,10 @@ export const getDoctor = async (id: string) => {
     
     if (error) {
       console.error('Error fetching doctor:', error);
-      throw error;
+      throw new Error(`Failed to fetch doctor: ${error.message}`);
     }
     
+    console.log('API: Doctor fetched successfully');
     return data;
   } catch (error) {
     console.error('GetDoctor function error:', error);
@@ -214,17 +248,39 @@ export const getDoctor = async (id: string) => {
 
 export const createDoctor = async (doctor: Omit<Doctor, 'id' | 'created_at' | 'updated_at'>) => {
   try {
+    console.log('API: Creating doctor:', doctor.email);
+    
+    // Validate required fields
+    if (!doctor.first_name || !doctor.last_name || !doctor.email || !doctor.specialization) {
+      throw new Error('First name, last name, email, and specialization are required');
+    }
+    
+    // Ensure is_active is set
+    const doctorData = {
+      ...doctor,
+      is_active: doctor.is_active !== undefined ? doctor.is_active : true
+    };
+    
     const { data, error } = await supabase
       .from('doctors')
-      .insert([doctor])
+      .insert([doctorData])
       .select()
       .single();
     
     if (error) {
       console.error('Error creating doctor:', error);
-      throw error;
+      if (error.code === '23505') {
+        if (error.message.includes('email')) {
+          throw new Error('A doctor with this email already exists');
+        }
+        if (error.message.includes('license_number')) {
+          throw new Error('A doctor with this license number already exists');
+        }
+      }
+      throw new Error(`Failed to create doctor: ${error.message}`);
     }
     
+    console.log('API: Doctor created successfully');
     return data;
   } catch (error) {
     console.error('CreateDoctor function error:', error);
@@ -234,6 +290,8 @@ export const createDoctor = async (doctor: Omit<Doctor, 'id' | 'created_at' | 'u
 
 export const updateDoctor = async (id: string, updates: Partial<Doctor>) => {
   try {
+    console.log('API: Updating doctor:', id);
+    
     const { data, error } = await supabase
       .from('doctors')
       .update(updates)
@@ -243,9 +301,18 @@ export const updateDoctor = async (id: string, updates: Partial<Doctor>) => {
     
     if (error) {
       console.error('Error updating doctor:', error);
-      throw error;
+      if (error.code === '23505') {
+        if (error.message.includes('email')) {
+          throw new Error('A doctor with this email already exists');
+        }
+        if (error.message.includes('license_number')) {
+          throw new Error('A doctor with this license number already exists');
+        }
+      }
+      throw new Error(`Failed to update doctor: ${error.message}`);
     }
     
+    console.log('API: Doctor updated successfully');
     return data;
   } catch (error) {
     console.error('UpdateDoctor function error:', error);
@@ -255,16 +322,21 @@ export const updateDoctor = async (id: string, updates: Partial<Doctor>) => {
 
 export const deleteDoctor = async (id: string) => {
   try {
+    console.log('API: Deactivating doctor:', id);
+    
     const { data, error } = await supabase
       .from('doctors')
       .update({ is_active: false })
-      .eq('id', id);
+      .eq('id', id)
+      .select()
+      .single();
     
     if (error) {
       console.error('Error deactivating doctor:', error);
-      throw error;
+      throw new Error(`Failed to deactivate doctor: ${error.message}`);
     }
     
+    console.log('API: Doctor deactivated successfully');
     return data;
   } catch (error) {
     console.error('DeleteDoctor function error:', error);
@@ -275,6 +347,7 @@ export const deleteDoctor = async (id: string) => {
 // Appointment functions
 export const getAppointments = async () => {
   try {
+    console.log('API: Fetching appointments...');
     const { data, error } = await supabase
       .from('appointments')
       .select(`
@@ -286,9 +359,10 @@ export const getAppointments = async () => {
     
     if (error) {
       console.error('Error fetching appointments:', error);
-      throw error;
+      throw new Error(`Failed to fetch appointments: ${error.message}`);
     }
     
+    console.log('API: Appointments fetched successfully:', data?.length || 0);
     return data || [];
   } catch (error) {
     console.error('GetAppointments function error:', error);
@@ -298,6 +372,7 @@ export const getAppointments = async () => {
 
 export const getAppointment = async (id: string) => {
   try {
+    console.log('API: Fetching appointment:', id);
     const { data, error } = await supabase
       .from('appointments')
       .select(`
@@ -310,9 +385,10 @@ export const getAppointment = async (id: string) => {
     
     if (error) {
       console.error('Error fetching appointment:', error);
-      throw error;
+      throw new Error(`Failed to fetch appointment: ${error.message}`);
     }
     
+    console.log('API: Appointment fetched successfully');
     return data;
   } catch (error) {
     console.error('GetAppointment function error:', error);
@@ -322,9 +398,22 @@ export const getAppointment = async (id: string) => {
 
 export const createAppointment = async (appointment: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>) => {
   try {
+    console.log('API: Creating appointment for patient:', appointment.patient_id);
+    
+    // Validate required fields
+    if (!appointment.patient_id || !appointment.doctor_id || !appointment.appointment_date || !appointment.appointment_time) {
+      throw new Error('Patient, doctor, date, and time are required');
+    }
+    
+    // Ensure duration is set
+    const appointmentData = {
+      ...appointment,
+      duration: appointment.duration || 30
+    };
+    
     const { data, error } = await supabase
       .from('appointments')
-      .insert([appointment])
+      .insert([appointmentData])
       .select(`
         *,
         patients (first_name, last_name, email, phone),
@@ -334,9 +423,10 @@ export const createAppointment = async (appointment: Omit<Appointment, 'id' | 'c
     
     if (error) {
       console.error('Error creating appointment:', error);
-      throw error;
+      throw new Error(`Failed to create appointment: ${error.message}`);
     }
     
+    console.log('API: Appointment created successfully');
     return data;
   } catch (error) {
     console.error('CreateAppointment function error:', error);
@@ -346,6 +436,8 @@ export const createAppointment = async (appointment: Omit<Appointment, 'id' | 'c
 
 export const updateAppointment = async (id: string, updates: Partial<Appointment>) => {
   try {
+    console.log('API: Updating appointment:', id);
+    
     const { data, error } = await supabase
       .from('appointments')
       .update(updates)
@@ -359,9 +451,10 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
     
     if (error) {
       console.error('Error updating appointment:', error);
-      throw error;
+      throw new Error(`Failed to update appointment: ${error.message}`);
     }
     
+    console.log('API: Appointment updated successfully');
     return data;
   } catch (error) {
     console.error('UpdateAppointment function error:', error);
@@ -371,6 +464,8 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
 
 export const deleteAppointment = async (id: string) => {
   try {
+    console.log('API: Deleting appointment:', id);
+    
     const { error } = await supabase
       .from('appointments')
       .delete()
@@ -378,8 +473,10 @@ export const deleteAppointment = async (id: string) => {
     
     if (error) {
       console.error('Error deleting appointment:', error);
-      throw error;
+      throw new Error(`Failed to delete appointment: ${error.message}`);
     }
+    
+    console.log('API: Appointment deleted successfully');
   } catch (error) {
     console.error('DeleteAppointment function error:', error);
     throw error;
@@ -389,6 +486,7 @@ export const deleteAppointment = async (id: string) => {
 // Medical Record functions
 export const getMedicalRecords = async () => {
   try {
+    console.log('API: Fetching medical records...');
     const { data, error } = await supabase
       .from('medical_records')
       .select(`
@@ -400,9 +498,10 @@ export const getMedicalRecords = async () => {
     
     if (error) {
       console.error('Error fetching medical records:', error);
-      throw error;
+      throw new Error(`Failed to fetch medical records: ${error.message}`);
     }
     
+    console.log('API: Medical records fetched successfully:', data?.length || 0);
     return data || [];
   } catch (error) {
     console.error('GetMedicalRecords function error:', error);
@@ -412,6 +511,8 @@ export const getMedicalRecords = async () => {
 
 export const createMedicalRecord = async (record: Omit<MedicalRecord, 'id' | 'created_at' | 'updated_at'>) => {
   try {
+    console.log('API: Creating medical record for patient:', record.patient_id);
+    
     const { data, error } = await supabase
       .from('medical_records')
       .insert([record])
@@ -420,9 +521,10 @@ export const createMedicalRecord = async (record: Omit<MedicalRecord, 'id' | 'cr
     
     if (error) {
       console.error('Error creating medical record:', error);
-      throw error;
+      throw new Error(`Failed to create medical record: ${error.message}`);
     }
     
+    console.log('API: Medical record created successfully');
     return data;
   } catch (error) {
     console.error('CreateMedicalRecord function error:', error);
@@ -433,6 +535,7 @@ export const createMedicalRecord = async (record: Omit<MedicalRecord, 'id' | 'cr
 // Invoice functions
 export const getInvoices = async () => {
   try {
+    console.log('API: Fetching invoices...');
     const { data, error } = await supabase
       .from('invoices')
       .select(`
@@ -444,9 +547,10 @@ export const getInvoices = async () => {
     
     if (error) {
       console.error('Error fetching invoices:', error);
-      throw error;
+      throw new Error(`Failed to fetch invoices: ${error.message}`);
     }
     
+    console.log('API: Invoices fetched successfully:', data?.length || 0);
     return data || [];
   } catch (error) {
     console.error('GetInvoices function error:', error);
@@ -456,6 +560,8 @@ export const getInvoices = async () => {
 
 export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'created_at' | 'updated_at'>) => {
   try {
+    console.log('API: Creating invoice for patient:', invoice.patient_id);
+    
     const { data, error } = await supabase
       .from('invoices')
       .insert([invoice])
@@ -464,9 +570,10 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'created_at' |
     
     if (error) {
       console.error('Error creating invoice:', error);
-      throw error;
+      throw new Error(`Failed to create invoice: ${error.message}`);
     }
     
+    console.log('API: Invoice created successfully');
     return data;
   } catch (error) {
     console.error('CreateInvoice function error:', error);
@@ -477,6 +584,8 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'created_at' |
 // Dashboard stats
 export const getDashboardStats = async () => {
   try {
+    console.log('API: Fetching dashboard stats...');
+    
     const [patientsResult, doctorsResult, appointmentsResult, invoicesResult] = await Promise.all([
       supabase.from('patients').select('id', { count: 'exact' }),
       supabase.from('doctors').select('id', { count: 'exact' }).eq('is_active', true),
@@ -484,14 +593,31 @@ export const getDashboardStats = async () => {
       supabase.from('invoices').select('total_amount').eq('status', 'paid')
     ]);
 
+    // Check for errors in any of the queries
+    if (patientsResult.error) {
+      console.error('Error fetching patients count:', patientsResult.error);
+    }
+    if (doctorsResult.error) {
+      console.error('Error fetching doctors count:', doctorsResult.error);
+    }
+    if (appointmentsResult.error) {
+      console.error('Error fetching appointments count:', appointmentsResult.error);
+    }
+    if (invoicesResult.error) {
+      console.error('Error fetching invoices:', invoicesResult.error);
+    }
+
     const totalRevenue = invoicesResult.data?.reduce((sum, invoice) => sum + invoice.total_amount, 0) || 0;
 
-    return {
+    const stats = {
       totalPatients: patientsResult.count || 0,
       totalDoctors: doctorsResult.count || 0,
       todayAppointments: appointmentsResult.count || 0,
       totalRevenue
     };
+    
+    console.log('API: Dashboard stats fetched successfully:', stats);
+    return stats;
   } catch (error) {
     console.error('GetDashboardStats function error:', error);
     throw error;
