@@ -41,6 +41,15 @@ const DoctorList: React.FC = () => {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
   const filteredDoctors = doctors.filter(doctor =>
     `${doctor.first_name} ${doctor.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     doctor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -291,8 +300,8 @@ const DoctorList: React.FC = () => {
                     </span>
                   </td>
                   <td style={{ padding: '1rem 0.75rem' }}>
-                    <span style={{ fontSize: '0.875rem', color: '#111827' }}>
-                      ${doctor.consultation_fee}
+                    <span style={{ fontSize: '0.875rem', color: '#111827', fontWeight: '500' }}>
+                      {formatCurrency(doctor.consultation_fee)}
                     </span>
                   </td>
                   <td style={{ padding: '1rem 0.75rem' }}>

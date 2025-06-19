@@ -34,6 +34,15 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
   if (loading) {
     return (
       <div style={{
@@ -98,7 +107,7 @@ const Dashboard: React.FC = () => {
     },
     {
       title: 'Total Revenue',
-      value: `$${stats?.totalRevenue?.toFixed(2) || '0.00'}`,
+      value: formatCurrency(stats?.totalRevenue || 0),
       icon: DollarSign,
       color: '#8b5cf6',
       onClick: () => navigate('/billing'),

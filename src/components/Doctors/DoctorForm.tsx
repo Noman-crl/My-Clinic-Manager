@@ -53,15 +53,18 @@ const DoctorForm: React.FC = () => {
     try {
       setLoading(true);
       setError('');
+      
+      console.log('Form submission data:', data);
+      
       if (isEdit && id) {
         await updateDoctor(id, data);
       } else {
         await createDoctor(data);
       }
       navigate('/doctors');
-    } catch (err) {
-      setError('Failed to save doctor. Please try again later.');
+    } catch (err: any) {
       console.error('Error saving doctor:', err);
+      setError(err.message || 'Failed to save doctor. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -221,6 +224,7 @@ const DoctorForm: React.FC = () => {
               </label>
               <input
                 {...register('phone', { required: 'Phone is required' })}
+                placeholder="+91 98765 43210"
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -247,7 +251,7 @@ const DoctorForm: React.FC = () => {
               }}>
                 Specialization *
               </label>
-              <input
+              <select
                 {...register('specialization', { required: 'Specialization is required' })}
                 style={{
                   width: '100%',
@@ -257,7 +261,21 @@ const DoctorForm: React.FC = () => {
                   fontSize: '0.875rem',
                   outline: 'none'
                 }}
-              />
+              >
+                <option value="">Select Specialization</option>
+                <option value="General Medicine">General Medicine</option>
+                <option value="Cardiology">Cardiology</option>
+                <option value="Dermatology">Dermatology</option>
+                <option value="Pediatrics">Pediatrics</option>
+                <option value="Orthopedics">Orthopedics</option>
+                <option value="Neurology">Neurology</option>
+                <option value="Gynecology">Gynecology</option>
+                <option value="ENT">ENT</option>
+                <option value="Ophthalmology">Ophthalmology</option>
+                <option value="Psychiatry">Psychiatry</option>
+                <option value="Radiology">Radiology</option>
+                <option value="Anesthesiology">Anesthesiology</option>
+              </select>
               {errors.specialization && (
                 <p style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: '0.25rem' }}>
                   {errors.specialization.message}
@@ -277,6 +295,7 @@ const DoctorForm: React.FC = () => {
               </label>
               <input
                 {...register('license_number', { required: 'License number is required' })}
+                placeholder="MCI-12345"
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -307,7 +326,8 @@ const DoctorForm: React.FC = () => {
                 type="number"
                 {...register('experience', { 
                   required: 'Experience is required',
-                  min: { value: 0, message: 'Experience must be positive' }
+                  min: { value: 0, message: 'Experience must be positive' },
+                  max: { value: 50, message: 'Experience cannot exceed 50 years' }
                 })}
                 style={{
                   width: '100%',
@@ -333,15 +353,17 @@ const DoctorForm: React.FC = () => {
                 color: '#374151',
                 marginBottom: '0.5rem'
               }}>
-                Consultation Fee *
+                Consultation Fee (₹) *
               </label>
               <input
                 type="number"
-                step="0.01"
+                step="1"
                 {...register('consultation_fee', { 
                   required: 'Consultation fee is required',
-                  min: { value: 0, message: 'Fee must be positive' }
+                  min: { value: 100, message: 'Fee must be at least ₹100' },
+                  max: { value: 10000, message: 'Fee cannot exceed ₹10,000' }
                 })}
+                placeholder="500"
                 style={{
                   width: '100%',
                   padding: '0.75rem',

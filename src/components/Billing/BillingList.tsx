@@ -27,6 +27,15 @@ const BillingList: React.FC = () => {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+
   const filteredInvoices = invoices.filter(invoice => {
     const matchesSearch = searchTerm === '' ||
       (invoice.patients && 
@@ -84,7 +93,7 @@ const BillingList: React.FC = () => {
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
-        align: 'center',
+        alignItems: 'center',
         marginBottom: '2rem'
       }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Billing & Payments</h1>
@@ -135,7 +144,7 @@ const BillingList: React.FC = () => {
                 fontWeight: 'bold',
                 color: '#10b981'
               }}>
-                ${totalRevenue.toFixed(2)}
+                {formatCurrency(totalRevenue)}
               </p>
             </div>
             <div style={{
@@ -177,7 +186,7 @@ const BillingList: React.FC = () => {
                 fontWeight: 'bold',
                 color: '#f59e0b'
               }}>
-                ${pendingAmount.toFixed(2)}
+                {formatCurrency(pendingAmount)}
               </p>
             </div>
             <div style={{
@@ -219,7 +228,7 @@ const BillingList: React.FC = () => {
                 fontWeight: 'bold',
                 color: '#ef4444'
               }}>
-                ${overdueAmount.toFixed(2)}
+                {formatCurrency(overdueAmount)}
               </p>
             </div>
             <div style={{
@@ -441,7 +450,7 @@ const BillingList: React.FC = () => {
                         }}>
                           <Calendar size={16} style={{ color: '#6b7280' }} />
                           <span style={{ fontSize: '0.875rem', color: '#111827' }}>
-                            {new Date(invoice.issue_date).toLocaleDateString()}
+                            {new Date(invoice.issue_date).toLocaleDateString('en-IN')}
                           </span>
                         </div>
                       </td>
@@ -452,13 +461,13 @@ const BillingList: React.FC = () => {
                             fontWeight: '500',
                             color: '#111827'
                           }}>
-                            ${invoice.total_amount.toFixed(2)}
+                            {formatCurrency(invoice.total_amount)}
                           </div>
                           <div style={{
                             fontSize: '0.75rem',
                             color: '#6b7280'
                           }}>
-                            Tax: ${invoice.tax_amount.toFixed(2)}
+                            Tax: {formatCurrency(invoice.tax_amount)}
                           </div>
                         </div>
                       </td>

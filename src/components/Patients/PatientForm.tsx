@@ -57,15 +57,18 @@ const PatientForm: React.FC = () => {
     try {
       setLoading(true);
       setError('');
+      
+      console.log('Form submission data:', data);
+      
       if (isEdit && id) {
         await updatePatient(id, data);
       } else {
         await createPatient(data);
       }
       navigate('/patients');
-    } catch (err) {
-      setError('Failed to save patient. Please try again later.');
+    } catch (err: any) {
       console.error('Error saving patient:', err);
+      setError(err.message || 'Failed to save patient. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -225,6 +228,7 @@ const PatientForm: React.FC = () => {
               </label>
               <input
                 {...register('phone', { required: 'Phone is required' })}
+                placeholder="+91 98765 43210"
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -291,6 +295,7 @@ const PatientForm: React.FC = () => {
                   outline: 'none'
                 }}
               >
+                <option value="">Select Gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
@@ -315,6 +320,7 @@ const PatientForm: React.FC = () => {
               <textarea
                 {...register('address', { required: 'Address is required' })}
                 rows={3}
+                placeholder="Enter complete address with city, state, and PIN code"
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -372,6 +378,7 @@ const PatientForm: React.FC = () => {
               </label>
               <input
                 {...register('emergency_phone', { required: 'Emergency phone is required' })}
+                placeholder="+91 98765 43210"
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -400,6 +407,7 @@ const PatientForm: React.FC = () => {
               </label>
               <input
                 {...register('insurance_number')}
+                placeholder="Health insurance policy number"
                 style={{
                   width: '100%',
                   padding: '0.75rem',
