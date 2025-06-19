@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, UserCheck, Calendar, DollarSign } from 'lucide-react';
+import { Users, UserCheck, Calendar, DollarSign, AlertCircle, RefreshCw } from 'lucide-react';
 import { getDashboardStats } from '../../services/supabaseApi';
 
 interface DashboardStats {
@@ -23,12 +23,31 @@ const Dashboard: React.FC = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const data = await getDashboardStats();
-      setStats(data);
       setError('');
-    } catch (err) {
-      setError('Failed to fetch dashboard statistics');
-      console.error('Error fetching stats:', err);
+      console.log('📊 Dashboard: Fetching stats...');
+      
+      const data = await getDashboardStats();
+      console.log('📊 Dashboard: Stats received:', data);
+      
+      setStats(data);
+    } catch (err: any) {
+      console.error('📊 Dashboard: Error fetching stats:', err);
+      
+      let errorMessage = 'Failed to fetch dashboard statistics';
+      
+      if (err.message) {
+        if (err.message.includes('Authentication required')) {
+          errorMessage = 'Please sign in to view dashboard data';
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMessage = 'Database connection failed. Please check your Supabase configuration.';
+        } else if (err.message.includes('relation') && err.message.includes('does not exist')) {
+          errorMessage = 'Database tables not found. Please run the database migrations.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -47,9 +66,11 @@ const Dashboard: React.FC = () => {
     return (
       <div style={{
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: '400px'
+        minHeight: '400px',
+        gap: '1rem'
       }}>
         <div style={{
           width: '32px',
@@ -59,6 +80,9 @@ const Dashboard: React.FC = () => {
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }}></div>
+        <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+          Loading dashboard data...
+        </p>
       </div>
     );
   }
@@ -73,11 +97,50 @@ const Dashboard: React.FC = () => {
           backgroundColor: '#fef2f2',
           border: '1px solid #fecaca',
           color: '#dc2626',
-          padding: '0.75rem',
+          padding: '1rem',
           borderRadius: '0.375rem',
-          marginBottom: '1rem'
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '0.75rem'
         }}>
-          {error}
+          <AlertCircle size={20} style={{ marginTop: '0.125rem', flexShrink: 0 }} />
+          <div>
+            <div style={{ fontWeight: '500', marginBottom: '0.5rem' }}>
+              Dashboard Error
+            </div>
+            <div style={{ fontSize: '0.875rem', marginBottom: '1rem' }}>
+              {error}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#991b1b' }}>
+              <strong>Troubleshooting steps:</strong>
+              <ol style={{ marginTop: '0.5rem', paddingLeft: '1rem' }}>
+                <li>Check browser console for detailed error messages</li>
+                <li>Verify your Supabase environment variables in .env file</li>
+                <li>Ensure database migrations have been run</li>
+                <li>Check Supabase project status and RLS policies</li>
+              </ol>
+            </div>
+            <button
+              onClick={fetchStats}
+              style={{
+                marginTop: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#dc2626',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem'
+              }}
+            >
+              <RefreshCw size={16} />
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -116,9 +179,34 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
-        Dashboard
-      </h1>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '2rem'
+      }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+          Dashboard
+        </h1>
+        <button
+          onClick={fetchStats}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.5rem 1rem',
+            backgroundColor: '#f3f4f6',
+            color: '#374151',
+            border: '1px solid #d1d5db',
+            borderRadius: '0.375rem',
+            cursor: 'pointer',
+            fontSize: '0.875rem'
+          }}
+        >
+          <RefreshCw size={16} />
+          Refresh
+        </button>
+      </div>
       
       <div style={{
         display: 'grid',
