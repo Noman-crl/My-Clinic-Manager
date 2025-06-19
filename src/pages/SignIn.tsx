@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Heart, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Heart, Eye, EyeOff, AlertCircle, Loader } from 'lucide-react';
 
 const SignIn: React.FC = () => {
   const { login } = useAuth();
@@ -34,6 +34,8 @@ const SignIn: React.FC = () => {
           errorMessage = 'Please check your email and confirm your account.';
         } else if (err.message.includes('Too many requests')) {
           errorMessage = 'Too many login attempts. Please try again later.';
+        } else if (err.message.includes('User not found')) {
+          errorMessage = 'No account found with this email. Please sign up first.';
         } else {
           errorMessage = err.message;
         }
@@ -47,6 +49,11 @@ const SignIn: React.FC = () => {
 
   const handleCreateDemoAccount = () => {
     navigate('/signup?demo=true');
+  };
+
+  const handleQuickDemo = () => {
+    setEmail('admin@clinic.com');
+    setPassword('Admin123!');
   };
 
   return (
@@ -189,15 +196,7 @@ const SignIn: React.FC = () => {
           >
             {loading ? (
               <>
-                <div style={{
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid white',
-                  borderTop: '2px solid transparent',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                  marginRight: '0.5rem'
-                }}></div>
+                <Loader size={16} style={{ marginRight: '0.5rem', animation: 'spin 1s linear infinite' }} />
                 Signing in...
               </>
             ) : (
@@ -215,7 +214,27 @@ const SignIn: React.FC = () => {
           textAlign: 'center'
         }}>
           <div style={{ marginBottom: '0.75rem' }}>
-            <strong style={{ color: '#1e293b' }}>No account yet?</strong>
+            <strong style={{ color: '#1e293b' }}>Quick Demo Access</strong>
+          </div>
+          <button
+            onClick={handleQuickDemo}
+            style={{
+              width: '100%',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#f59e0b',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              marginBottom: '0.75rem'
+            }}
+          >
+            Fill Demo Credentials
+          </button>
+          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
+            Or create a new demo account:
           </div>
           <button
             onClick={handleCreateDemoAccount}
@@ -228,15 +247,11 @@ const SignIn: React.FC = () => {
               borderRadius: '0.375rem',
               cursor: 'pointer',
               fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.5rem'
+              fontWeight: '500'
             }}
           >
             Create Demo Account
           </button>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-            This will create a demo admin account for testing
-          </div>
         </div>
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>

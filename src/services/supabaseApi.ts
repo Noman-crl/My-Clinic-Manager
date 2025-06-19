@@ -4,7 +4,7 @@ import type { Patient, Doctor, Appointment, MedicalRecord, Invoice } from '../li
 // Auth functions
 export const signUp = async (email: string, password: string, userData: any) => {
   try {
-    console.log('SignUp API: Attempting to create user:', email);
+    console.log('📝 SignUp API: Attempting to create user:', email);
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -22,9 +22,9 @@ export const signUp = async (email: string, password: string, userData: any) => 
     
     console.log('✅ SignUp API: User created successfully');
     
-    // Check if user was created and is confirmed
+    // For demo purposes, if email confirmation is disabled, the user should be immediately available
     if (data.user && !data.user.email_confirmed_at) {
-      console.log('📧 User created but email not confirmed - this is normal for demo');
+      console.log('📧 User created - email confirmation may be required');
     }
     
     return data;
@@ -36,7 +36,7 @@ export const signUp = async (email: string, password: string, userData: any) => 
 
 export const signIn = async (email: string, password: string) => {
   try {
-    console.log('SignIn API: Attempting to sign in:', email);
+    console.log('🔐 SignIn API: Attempting to sign in:', email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -60,7 +60,7 @@ export const signIn = async (email: string, password: string) => {
 
 export const signOut = async () => {
   try {
-    console.log('SignOut API: Attempting to sign out');
+    console.log('🚪 SignOut API: Attempting to sign out');
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('❌ Supabase signOut error:', error);
@@ -87,19 +87,27 @@ export const getCurrentUser = async () => {
   }
 };
 
-// Helper function to check authentication
+// Helper function to check authentication with better error handling
 const checkAuth = async () => {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error('❌ Auth check failed:', error);
-    throw new Error('Authentication required. Please sign in again.');
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) {
+      console.error('❌ Auth check failed:', error);
+      throw new Error('Authentication required. Please sign in again.');
+    }
+    
+    if (!user) {
+      console.error('❌ No authenticated user found');
+      throw new Error('You must be signed in to perform this action.');
+    }
+    
+    console.log('✅ User authenticated:', user.email);
+    return user;
+  } catch (error) {
+    console.error('❌ checkAuth error:', error);
+    throw error;
   }
-  if (!user) {
-    console.error('❌ No authenticated user found');
-    throw new Error('You must be signed in to perform this action.');
-  }
-  console.log('✅ User authenticated:', user.email);
-  return user;
 };
 
 // Patient functions
@@ -751,15 +759,19 @@ export const getDashboardStats = async () => {
     // Check for errors in any of the queries
     if (patientsResult.error) {
       console.error('❌ Error fetching patients count:', patientsResult.error);
+      throw new Error(`Failed to fetch patients count: ${patientsResult.error.message}`);
     }
     if (doctorsResult.error) {
       console.error('❌ Error fetching doctors count:', doctorsResult.error);
+      throw new Error(`Failed to fetch doctors count: ${doctorsResult.error.message}`);
     }
     if (appointmentsResult.error) {
       console.error('❌ Error fetching appointments count:', appointmentsResult.error);
+      throw new Error(`Failed to fetch appointments count: ${appointmentsResult.error.message}`);
     }
     if (invoicesResult.error) {
       console.error('❌ Error fetching invoices:', invoicesResult.error);
+      throw new Error(`Failed to fetch invoices: ${invoicesResult.error.message}`);
     }
 
     const totalRevenue = invoicesResult.data?.reduce((sum, invoice) => sum + invoice.total_amount, 0) || 0;
