@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Heart, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { Heart, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 const SignUp: React.FC = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const isDemo = searchParams.get('demo') === 'true';
   
   const [formData, setFormData] = useState({
-    name: isDemo ? 'Demo Admin' : '',
-    email: isDemo ? 'admin@clinic.com' : '',
-    password: isDemo ? 'Admin123!' : '',
-    confirmPassword: isDemo ? 'Admin123!' : ''
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -96,25 +94,8 @@ const SignUp: React.FC = () => {
             </h1>
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#374151' }}>
-            {isDemo ? 'Create Demo Account' : 'Create your account'}
+            Create your account
           </h2>
-          {isDemo && (
-            <div style={{
-              backgroundColor: '#d1fae5',
-              border: '1px solid #a7f3d0',
-              color: '#065f46',
-              padding: '0.75rem',
-              borderRadius: '0.375rem',
-              marginTop: '1rem',
-              fontSize: '0.875rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <CheckCircle size={16} />
-              Demo credentials pre-filled for quick setup
-            </div>
-          )}
         </div>
 
         {error && (
@@ -288,7 +269,7 @@ const SignUp: React.FC = () => {
             style={{
               width: '100%',
               padding: '0.75rem',
-              backgroundColor: loading ? '#9ca3af' : (isDemo ? '#10b981' : '#3b82f6'),
+              backgroundColor: loading ? '#9ca3af' : '#3b82f6',
               color: 'white',
               border: 'none',
               borderRadius: '0.375rem',
@@ -314,37 +295,10 @@ const SignUp: React.FC = () => {
                 Creating account...
               </>
             ) : (
-              isDemo ? 'Create Demo Account' : 'Create Account'
+              'Create Account'
             )}
           </button>
         </form>
-
-        {isDemo && (
-          <div style={{
-            marginTop: '1rem',
-            padding: '1rem',
-            backgroundColor: '#f0f9ff',
-            borderRadius: '0.375rem',
-            fontSize: '0.875rem',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontWeight: '500', marginBottom: '0.5rem', color: '#1e40af' }}>
-              Demo Account Features:
-            </div>
-            <ul style={{ 
-              listStyle: 'none', 
-              padding: 0, 
-              margin: 0, 
-              fontSize: '0.75rem', 
-              color: '#374151',
-              textAlign: 'left'
-            }}>
-              <li>• Full access to all clinic features</li>
-              <li>• Pre-loaded sample data</li>
-              <li>• Perfect for testing and evaluation</li>
-            </ul>
-          </div>
-        )}
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
           <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>

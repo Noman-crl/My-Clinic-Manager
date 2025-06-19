@@ -6,7 +6,13 @@ import {
   UserCheck,
   Calendar,
   FileText,
-  Receipt
+  Receipt,
+  Pill,
+  ShoppingCart,
+  TrendingUp,
+  Settings,
+  Package,
+  CreditCard
 } from 'lucide-react';
 
 const menuItems = [
@@ -15,7 +21,13 @@ const menuItems = [
   { text: 'Doctors', icon: UserCheck, path: '/doctors' },
   { text: 'Appointments', icon: Calendar, path: '/appointments' },
   { text: 'Medical Records', icon: FileText, path: '/medical-records' },
+  { text: 'Pharmacy', icon: Pill, path: '/pharmacy' },
+  { text: 'Purchases', icon: ShoppingCart, path: '/purchases' },
+  { text: 'Inventory', icon: Package, path: '/inventory' },
   { text: 'Billing', icon: Receipt, path: '/billing' },
+  { text: 'Accounts', icon: CreditCard, path: '/accounts' },
+  { text: 'Reports', icon: TrendingUp, path: '/reports' },
+  { text: 'Settings', icon: Settings, path: '/settings' },
 ];
 
 const Sidebar: React.FC = () => {
@@ -60,6 +72,16 @@ const Sidebar: React.FC = () => {
                     fontWeight: isActive ? '600' : '400',
                     textAlign: 'left',
                     transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = '#f3f4f6';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
                   }}
                 >
                   <Icon size={18} />

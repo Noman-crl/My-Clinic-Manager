@@ -47,15 +47,6 @@ const SignIn: React.FC = () => {
     }
   };
 
-  const handleCreateDemoAccount = () => {
-    navigate('/signup?demo=true');
-  };
-
-  const handleQuickDemo = () => {
-    setEmail('admin@clinic.com');
-    setPassword('Admin123!');
-  };
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -204,59 +195,10 @@ const SignIn: React.FC = () => {
             )}
           </button>
         </form>
-        
-        <div style={{
-          marginTop: '1rem',
-          padding: '1rem',
-          backgroundColor: '#f1f5f9',
-          borderRadius: '0.375rem',
-          fontSize: '0.875rem',
-          textAlign: 'center'
-        }}>
-          <div style={{ marginBottom: '0.75rem' }}>
-            <strong style={{ color: '#1e293b' }}>Quick Demo Access</strong>
-          </div>
-          <button
-            onClick={handleQuickDemo}
-            style={{
-              width: '100%',
-              padding: '0.5rem 1rem',
-              backgroundColor: '#f59e0b',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              marginBottom: '0.75rem'
-            }}
-          >
-            Fill Demo Credentials
-          </button>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.75rem' }}>
-            Or create a new demo account:
-          </div>
-          <button
-            onClick={handleCreateDemoAccount}
-            style={{
-              width: '100%',
-              padding: '0.5rem 1rem',
-              backgroundColor: '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: '500'
-            }}
-          >
-            Create Demo Account
-          </button>
-        </div>
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
           <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-            Want to create your own account?{' '}
+            Don't have an account?{' '}
           </span>
           <Link
             to="/signup"

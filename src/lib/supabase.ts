@@ -163,3 +163,195 @@ export interface Invoice {
   created_at: string;
   updated_at: string;
 }
+
+// New types for comprehensive system
+export interface User {
+  id: string;
+  auth_user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  role: 'admin' | 'doctor' | 'pharmacist' | 'accountant' | 'receptionist';
+  permissions: any;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Medicine {
+  id: string;
+  name: string;
+  generic_name?: string;
+  manufacturer?: string;
+  category?: string;
+  unit: string;
+  strength?: string;
+  form?: string;
+  batch_number?: string;
+  expiry_date?: string;
+  purchase_price: number;
+  selling_price: number;
+  mrp: number;
+  stock_quantity: number;
+  minimum_stock: number;
+  maximum_stock: number;
+  location?: string;
+  hsn_code?: string;
+  gst_rate: number;
+  is_prescription_required: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  gstin?: string;
+  pan?: string;
+  payment_terms: number;
+  credit_limit: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Purchase {
+  id: string;
+  purchase_number: string;
+  supplier_id: string;
+  purchase_date: string;
+  invoice_number?: string;
+  invoice_date?: string;
+  total_amount: number;
+  discount_amount: number;
+  tax_amount: number;
+  net_amount: number;
+  payment_status: 'pending' | 'partial' | 'paid';
+  status: 'draft' | 'ordered' | 'received' | 'cancelled';
+  notes?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  // Relations
+  suppliers?: Supplier;
+  purchase_items?: PurchaseItem[];
+}
+
+export interface PurchaseItem {
+  id: string;
+  purchase_id: string;
+  medicine_id: string;
+  quantity: number;
+  unit_price: number;
+  discount_percent: number;
+  discount_amount: number;
+  tax_percent: number;
+  tax_amount: number;
+  total_amount: number;
+  batch_number?: string;
+  expiry_date?: string;
+  created_at: string;
+  // Relations
+  medicines?: Medicine;
+}
+
+export interface PharmacySale {
+  id: string;
+  sale_number: string;
+  patient_id?: string;
+  doctor_id?: string;
+  prescription_id?: string;
+  sale_date: string;
+  total_amount: number;
+  discount_amount: number;
+  tax_amount: number;
+  net_amount: number;
+  payment_method: 'cash' | 'card' | 'upi' | 'credit';
+  payment_status: 'pending' | 'paid' | 'refunded';
+  served_by?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // Relations
+  patients?: Patient;
+  doctors?: Doctor;
+  pharmacy_sale_items?: PharmacySaleItem[];
+}
+
+export interface PharmacySaleItem {
+  id: string;
+  sale_id: string;
+  medicine_id: string;
+  quantity: number;
+  unit_price: number;
+  discount_percent: number;
+  discount_amount: number;
+  tax_percent: number;
+  tax_amount: number;
+  total_amount: number;
+  batch_number?: string;
+  expiry_date?: string;
+  created_at: string;
+  // Relations
+  medicines?: Medicine;
+}
+
+export interface Account {
+  id: string;
+  account_code: string;
+  account_name: string;
+  account_type: 'asset' | 'liability' | 'equity' | 'income' | 'expense';
+  parent_account_id?: string;
+  is_active: boolean;
+  opening_balance: number;
+  current_balance: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Transaction {
+  id: string;
+  transaction_number: string;
+  transaction_date: string;
+  reference_type?: string;
+  reference_id?: string;
+  description: string;
+  total_amount: number;
+  created_by?: string;
+  approved_by?: string;
+  status: 'draft' | 'posted' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+  // Relations
+  transaction_entries?: TransactionEntry[];
+}
+
+export interface TransactionEntry {
+  id: string;
+  transaction_id: string;
+  account_id: string;
+  debit_amount: number;
+  credit_amount: number;
+  description?: string;
+  created_at: string;
+  // Relations
+  accounts?: Account;
+}
+
+export interface TaxSetting {
+  id: string;
+  tax_name: string;
+  tax_type: 'gst' | 'tds' | 'cess' | 'other';
+  tax_rate: number;
+  is_active: boolean;
+  applicable_from: string;
+  applicable_to?: string;
+  created_at: string;
+  updated_at: string;
+}

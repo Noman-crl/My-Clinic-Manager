@@ -11,6 +11,16 @@ import AppointmentList from './components/Appointments/AppointmentList';
 import AppointmentForm from './components/Appointments/AppointmentForm';
 import MedicalRecordsList from './components/MedicalRecords/MedicalRecordsList';
 import BillingList from './components/Billing/BillingList';
+import PharmacyDashboard from './components/Pharmacy/PharmacyDashboard';
+import MedicineList from './components/Pharmacy/MedicineList';
+import MedicineForm from './components/Pharmacy/MedicineForm';
+import PharmacySales from './components/Pharmacy/PharmacySales';
+import PurchaseList from './components/Purchases/PurchaseList';
+import PurchaseForm from './components/Purchases/PurchaseForm';
+import InventoryList from './components/Inventory/InventoryList';
+import AccountsList from './components/Accounts/AccountsList';
+import ReportsDashboard from './components/Reports/ReportsDashboard';
+import Settings from './components/Settings/Settings';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Home from './pages/Home';
@@ -184,12 +194,120 @@ const App: React.FC = () => {
               }
             />
             
+            {/* Pharmacy Routes */}
+            <Route
+              path="/pharmacy"
+              element={
+                <ProtectedRoute>
+                  <PharmacyDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pharmacy/medicines"
+              element={
+                <ProtectedRoute>
+                  <MedicineList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pharmacy/medicines/new"
+              element={
+                <ProtectedRoute>
+                  <MedicineForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pharmacy/medicines/:id"
+              element={
+                <ProtectedRoute>
+                  <MedicineForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pharmacy/sales"
+              element={
+                <ProtectedRoute>
+                  <PharmacySales />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Purchase Routes */}
+            <Route
+              path="/purchases"
+              element={
+                <ProtectedRoute>
+                  <PurchaseList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/purchases/new"
+              element={
+                <ProtectedRoute>
+                  <PurchaseForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/purchases/:id"
+              element={
+                <ProtectedRoute>
+                  <PurchaseForm />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Inventory Routes */}
+            <Route
+              path="/inventory"
+              element={
+                <ProtectedRoute>
+                  <InventoryList />
+                </ProtectedRoute>
+              }
+            />
+            
             {/* Billing Routes */}
             <Route
               path="/billing"
               element={
                 <ProtectedRoute>
                   <BillingList />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Accounts Routes */}
+            <Route
+              path="/accounts"
+              element={
+                <ProtectedRoute>
+                  <AccountsList />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Reports Routes */}
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <ReportsDashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Settings Routes */}
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />
