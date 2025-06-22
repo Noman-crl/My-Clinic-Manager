@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Users, Shield, Bell, Database, Printer, Globe } from 'lucide-react';
+import { Settings as SettingsIcon, Users, Shield, Bell, Database, Printer, Globe, Percent } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
 
   const tabs = [
     { id: 'general', label: 'General', icon: SettingsIcon },
+    { id: 'discounts', label: 'Discount Settings', icon: Percent },
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -152,6 +153,564 @@ const Settings: React.FC = () => {
                     resize: 'vertical'
                   }}
                 />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'discounts':
+        return (
+          <div>
+            <h3 style={{
+              fontSize: '1.125rem',
+              fontWeight: '600',
+              marginBottom: '1rem',
+              color: '#374151'
+            }}>
+              Discount Settings
+            </h3>
+            
+            <div style={{
+              backgroundColor: '#f9fafb',
+              padding: '1rem',
+              borderRadius: '0.375rem',
+              marginBottom: '2rem',
+              border: '1px solid #e5e7eb'
+            }}>
+              <p style={{
+                fontSize: '0.875rem',
+                color: '#6b7280',
+                margin: 0
+              }}>
+                Configure automatic discounts based on patient age and other criteria.
+              </p>
+            </div>
+
+            {/* Age-based Discounts */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h4 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                marginBottom: '1rem',
+                color: '#374151'
+              }}>
+                Age-based Discounts
+              </h4>
+              
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '1.5rem'
+              }}>
+                <div style={{
+                  backgroundColor: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem'
+                  }}>
+                    <h5 style={{
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      color: '#374151',
+                      margin: 0
+                    }}>
+                      Senior Citizen Discount (Age 60+)
+                    </h5>
+                    <label style={{
+                      position: 'relative',
+                      display: 'inline-block',
+                      width: '44px',
+                      height: '24px'
+                    }}>
+                      <input type="checkbox" defaultChecked style={{ opacity: 0, width: 0, height: 0 }} />
+                      <span style={{
+                        position: 'absolute',
+                        cursor: 'pointer',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: '#10b981',
+                        borderRadius: '24px',
+                        transition: '0.4s'
+                      }}></span>
+                    </label>
+                  </div>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem'
+                  }}>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: '#6b7280',
+                        marginBottom: '0.25rem'
+                      }}>
+                        Minimum Age
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue="60"
+                        min="0"
+                        max="120"
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: '#6b7280',
+                        marginBottom: '0.25rem'
+                      }}>
+                        Discount %
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue="5"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    marginTop: '1rem',
+                    fontSize: '0.75rem',
+                    color: '#6b7280'
+                  }}>
+                    Automatically applies 5% discount for patients aged 60 and above
+                  </div>
+                </div>
+
+                <div style={{
+                  backgroundColor: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem'
+                  }}>
+                    <h5 style={{
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      color: '#374151',
+                      margin: 0
+                    }}>
+                      Super Senior Discount (Age 70+)
+                    </h5>
+                    <label style={{
+                      position: 'relative',
+                      display: 'inline-block',
+                      width: '44px',
+                      height: '24px'
+                    }}>
+                      <input type="checkbox" defaultChecked style={{ opacity: 0, width: 0, height: 0 }} />
+                      <span style={{
+                        position: 'absolute',
+                        cursor: 'pointer',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: '#10b981',
+                        borderRadius: '24px',
+                        transition: '0.4s'
+                      }}></span>
+                    </label>
+                  </div>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem'
+                  }}>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: '#6b7280',
+                        marginBottom: '0.25rem'
+                      }}>
+                        Minimum Age
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue="70"
+                        min="0"
+                        max="120"
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: '#6b7280',
+                        marginBottom: '0.25rem'
+                      }}>
+                        Discount %
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue="10"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    marginTop: '1rem',
+                    fontSize: '0.75rem',
+                    color: '#6b7280'
+                  }}>
+                    Higher discount for patients aged 70 and above (overrides 60+ discount)
+                  </div>
+                </div>
+
+                <div style={{
+                  backgroundColor: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '1rem'
+                  }}>
+                    <h5 style={{
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      color: '#374151',
+                      margin: 0
+                    }}>
+                      Child Discount (Age 0-12)
+                    </h5>
+                    <label style={{
+                      position: 'relative',
+                      display: 'inline-block',
+                      width: '44px',
+                      height: '24px'
+                    }}>
+                      <input type="checkbox" style={{ opacity: 0, width: 0, height: 0 }} />
+                      <span style={{
+                        position: 'absolute',
+                        cursor: 'pointer',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: '#d1d5db',
+                        borderRadius: '24px',
+                        transition: '0.4s'
+                      }}></span>
+                    </label>
+                  </div>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '1rem'
+                  }}>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: '#6b7280',
+                        marginBottom: '0.25rem'
+                      }}>
+                        Maximum Age
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue="12"
+                        min="0"
+                        max="18"
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
+                        color: '#6b7280',
+                        marginBottom: '0.25rem'
+                      }}>
+                        Discount %
+                      </label>
+                      <input
+                        type="number"
+                        defaultValue="3"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        style={{
+                          width: '100%',
+                          padding: '0.5rem',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    marginTop: '1rem',
+                    fontSize: '0.75rem',
+                    color: '#6b7280'
+                  }}>
+                    Special discount for children (currently disabled)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Other Discount Settings */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h4 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                marginBottom: '1rem',
+                color: '#374151'
+              }}>
+                General Discount Settings
+              </h4>
+              
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '1.5rem'
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Maximum Discount Allowed (%)
+                  </label>
+                  <input
+                    type="number"
+                    defaultValue="25"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: '#6b7280',
+                    marginTop: '0.25rem'
+                  }}>
+                    Maximum discount that can be applied to any sale
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Bulk Purchase Discount Threshold (₹)
+                  </label>
+                  <input
+                    type="number"
+                    defaultValue="2000"
+                    min="0"
+                    step="100"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: '#6b7280',
+                    marginTop: '0.25rem'
+                  }}>
+                    Minimum amount for bulk purchase discount eligibility
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Bulk Purchase Discount (%)
+                  </label>
+                  <input
+                    type="number"
+                    defaultValue="2"
+                    min="0"
+                    max="20"
+                    step="0.1"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: '#6b7280',
+                    marginTop: '0.25rem'
+                  }}>
+                    Discount percentage for bulk purchases
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Discount Rules */}
+            <div style={{
+              backgroundColor: '#f9fafb',
+              padding: '1.5rem',
+              borderRadius: '0.5rem',
+              border: '1px solid #e5e7eb'
+            }}>
+              <h4 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                marginBottom: '1rem',
+                color: '#374151'
+              }}>
+                Discount Application Rules
+              </h4>
+              
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <input type="checkbox" defaultChecked />
+                  <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                    Age-based discounts take priority over manual discounts
+                  </span>
+                </div>
+                
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <input type="checkbox" defaultChecked />
+                  <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                    Apply highest applicable age-based discount only
+                  </span>
+                </div>
+                
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <input type="checkbox" />
+                  <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                    Allow stacking of age-based and bulk purchase discounts
+                  </span>
+                </div>
+                
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <input type="checkbox" defaultChecked />
+                  <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                    Show discount breakdown on receipts
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -792,7 +1351,7 @@ const Settings: React.FC = () => {
           height: 'fit-content'
         }}>
           <nav>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            <ul style={{ listStyle: 'none',  padding: 0, margin: 0 }}>
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -830,6 +1389,18 @@ const Settings: React.FC = () => {
                     >
                       <Icon size={18} />
                       {tab.label}
+                      {tab.id === 'discounts' && (
+                        <span style={{
+                          marginLeft: 'auto',
+                          fontSize: '0.75rem',
+                          backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : '#10b981',
+                          color: isActive ? 'white' : 'white',
+                          padding: '0.125rem 0.375rem',
+                          borderRadius: '0.25rem'
+                        }}>
+                          NEW
+                        </span>
+                      )}
                     </button>
                   </li>
                 );
