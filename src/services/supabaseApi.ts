@@ -232,6 +232,160 @@ export const deleteUser = async (userId: string) => {
   }
 };
 
+// Pharmacy Sales functions
+export const createPharmacySale = async (saleData: {
+  patient_id?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_age?: number;
+  items: Array<{
+    medicine_id: string;
+    medicine_name: string;
+    quantity: number;
+    unit_price: number;
+    discount_percent: number;
+    gst_rate: number;
+  }>;
+  total_amount: number;
+  discount_amount: number;
+  tax_amount: number;
+  net_amount: number;
+  payment_method: string;
+  notes?: string;
+}) => {
+  try {
+    console.log('💊 API: Creating pharmacy sale...');
+    
+    // Check authentication first
+    const user = await checkAuth();
+    
+    // Create the sale record
+    const { data: saleRecord, error: saleError } = await supabase
+      .from('pharmacy_sales')
+      .insert([{
+        patient_id: saleData.patient_id,
+        total_amount: saleData.total_amount,
+        discount_amount: saleData.discount_amount,
+        tax_amount: saleData.tax_amount,
+        net_amount: saleData.net_amount,
+        payment_method: saleData.payment_method,
+        payment_status: 'paid',
+        served_by: user.id,
+        notes: saleData.notes || `Customer: ${saleData.customer_name || 'Walk-in'}, Phone: ${saleData.customer_phone || 'N/A'}, Age: ${saleData.customer_age || 'N/A'}`
+      }])
+      .select()
+      .single();
+    
+    if (saleError) {
+      console.error('❌ Error creating pharmacy sale:', saleError);
+      throw new Error(`Failed to create sale: ${saleError.message}`);
+    }
+    
+    // Create sale items
+    const saleItems = saleData.items.map(item => {
+      const itemTotal = item.quantity * item.unit_price;
+      const discountAmount = (itemTotal * item.discount_percent) / 100;
+      const taxableAmount = itemTotal - discountAmount;
+      const taxAmount = (taxableAmount * item.gst_rate) / 100;
+      const totalAmount = taxableAmount + taxAmount;
+      
+      return {
+        sale_id: saleRecord.id,
+        medicine_id: item.medicine_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        discount_percent: item.discount_percent,
+        discount_amount: discountAmount,
+        tax_percent: item.gst_rate,
+        tax_amount: taxAmount,
+        total_amount: totalAmount
+      };
+    });
+    
+    const { error: itemsError } = await supabase
+      .from('pharmacy_sale_items')
+      .insert(saleItems);
+    
+    if (itemsError) {
+      console.error('❌ Error creating sale items:', itemsError);
+      // Clean up the sale record if items creation fails
+      await supabase.from('pharmacy_sales').delete().eq('id', saleRecord.id);
+      throw new Error(`Failed to create sale items: ${itemsError.message}`);
+    }
+    
+    console.log('✅ API: Pharmacy sale created successfully');
+    return saleRecord;
+  } catch (error) {
+    console.error('❌ CreatePharmacySale function error:', error);
+    throw error;
+  }
+};
+
+export const getPharmacySales = async () => {
+  try {
+    console.log('💊 API: Fetching pharmacy sales...');
+    
+    // Check authentication first
+    await checkAuth();
+    
+    const { data, error } = await supabase
+      .from('pharmacy_sales')
+      .select(`
+        *,
+        patients (first_name, last_name, email, phone),
+        pharmacy_sale_items (
+          *,
+          medicines (name, generic_name)
+        )
+      `)
+      .order('sale_date', { ascending: false });
+    
+    if (error) {
+      console.error('❌ Error fetching pharmacy sales:', error);
+      throw new Error(`Failed to fetch sales: ${error.message}`);
+    }
+    
+    console.log('✅ API: Pharmacy sales fetched successfully:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('❌ GetPharmacySales function error:', error);
+    throw error;
+  }
+};
+
+export const getPharmacySale = async (saleId: string) => {
+  try {
+    console.log('💊 API: Fetching pharmacy sale:', saleId);
+    
+    // Check authentication first
+    await checkAuth();
+    
+    const { data, error } = await supabase
+      .from('pharmacy_sales')
+      .select(`
+        *,
+        patients (first_name, last_name, email, phone),
+        pharmacy_sale_items (
+          *,
+          medicines (name, generic_name, unit)
+        )
+      `)
+      .eq('id', saleId)
+      .single();
+    
+    if (error) {
+      console.error('❌ Error fetching pharmacy sale:', error);
+      throw new Error(`Failed to fetch sale: ${error.message}`);
+    }
+    
+    console.log('✅ API: Pharmacy sale fetched successfully');
+    return data;
+  } catch (error) {
+    console.error('❌ GetPharmacySale function error:', error);
+    throw error;
+  }
+};
+
 // Helper function to check authentication with better error handling
 const checkAuth = async () => {
   try {

@@ -282,6 +282,14 @@ const App: React.FC = () => {
               }
             />
             <Route
+              path="/medical-shop/sales/:id"
+              element={
+                <ProtectedRoute>
+                  <PharmacySales />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/medical-shop/customers"
               element={
                 <ProtectedRoute>
