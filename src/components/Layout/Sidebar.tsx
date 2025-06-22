@@ -12,7 +12,8 @@ import {
   TrendingUp,
   Settings,
   Package,
-  CreditCard
+  CreditCard,
+  Store
 } from 'lucide-react';
 
 const menuItems = [
@@ -22,6 +23,7 @@ const menuItems = [
   { text: 'Appointments', icon: Calendar, path: '/appointments' },
   { text: 'Medical Records', icon: FileText, path: '/medical-records' },
   { text: 'Pharmacy', icon: Pill, path: '/pharmacy' },
+  { text: 'Medical Shop', icon: Store, path: '/medical-shop' },
   { text: 'Purchases', icon: ShoppingCart, path: '/purchases' },
   { text: 'Inventory', icon: Package, path: '/inventory' },
   { text: 'Billing', icon: Receipt, path: '/billing' },

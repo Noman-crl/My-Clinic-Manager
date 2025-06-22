@@ -15,6 +15,8 @@ import PharmacyDashboard from './components/Pharmacy/PharmacyDashboard';
 import MedicineList from './components/Pharmacy/MedicineList';
 import MedicineForm from './components/Pharmacy/MedicineForm';
 import PharmacySales from './components/Pharmacy/PharmacySales';
+import MedicalShopDashboard from './components/MedicalShop/MedicalShopDashboard';
+import POSSystem from './components/MedicalShop/POSSystem';
 import PurchaseList from './components/Purchases/PurchaseList';
 import PurchaseForm from './components/Purchases/PurchaseForm';
 import InventoryList from './components/Inventory/InventoryList';
@@ -232,6 +234,48 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <PharmacySales />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Medical Shop Routes */}
+            <Route
+              path="/medical-shop"
+              element={
+                <ProtectedRoute>
+                  <MedicalShopDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/medical-shop/pos"
+              element={
+                <ProtectedRoute>
+                  <POSSystem />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/medical-shop/new-sale"
+              element={
+                <ProtectedRoute>
+                  <POSSystem />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/medical-shop/sales"
+              element={
+                <ProtectedRoute>
+                  <PharmacySales />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/medical-shop/customers"
+              element={
+                <ProtectedRoute>
+                  <PatientList />
                 </ProtectedRoute>
               }
             />
