@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Edit, Eye, X, Calendar, Clock, User, UserCheck } from 'lucide-react';
+import { Plus, Search, Edit, Eye, X, Calendar, Clock, User, UserCheck, Phone } from 'lucide-react';
 import { getAppointments, deleteAppointment } from '../../services/supabaseApi';
 import type { Appointment } from '../../lib/supabase';
 
@@ -103,25 +103,46 @@ const AppointmentList: React.FC = () => {
         marginBottom: '2rem'
       }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Appointment Management</h1>
-        <button
-          onClick={() => navigate('/appointments/new')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.75rem 1rem',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.375rem',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            fontWeight: '500'
-          }}
-        >
-          <Plus size={16} />
-          Schedule Appointment
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button
+            onClick={() => navigate('/appointments/phone')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1rem',
+              backgroundColor: '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: '500'
+            }}
+          >
+            <Phone size={16} />
+            Phone Booking
+          </button>
+          <button
+            onClick={() => navigate('/appointments/new')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1rem',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: '500'
+            }}
+          >
+            <Plus size={16} />
+            Schedule Appointment
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -279,6 +300,8 @@ const AppointmentList: React.FC = () => {
             <tbody style={{ backgroundColor: 'white' }}>
               {filteredAppointments.map((appointment) => {
                 const statusColors = getStatusColor(appointment.status);
+                const isPhoneBooking = appointment.notes?.includes('phone booking') || !appointment.patients;
+                
                 return (
                   <tr key={appointment.id} style={{ borderTop: '1px solid #f3f4f6' }}>
                     <td style={{ padding: '1rem 0.75rem' }}>
@@ -289,6 +312,7 @@ const AppointmentList: React.FC = () => {
                           gap: '0.5rem',
                           marginBottom: '0.25rem'
                         }}>
+                          {isPhoneBooking && <Phone size={14} style={{ color: '#10b981' }} />}
                           <User size={14} style={{ color: '#6b7280' }} />
                           <span style={{
                             fontSize: '0.875rem',
@@ -297,7 +321,7 @@ const AppointmentList: React.FC = () => {
                           }}>
                             {appointment.patients ? 
                               `${appointment.patients.first_name} ${appointment.patients.last_name}` : 
-                              'Unknown Patient'
+                              'Phone Booking'
                             }
                           </span>
                         </div>
@@ -305,8 +329,17 @@ const AppointmentList: React.FC = () => {
                           fontSize: '0.75rem',
                           color: '#6b7280'
                         }}>
-                          {appointment.patients?.phone || 'No phone'}
+                          {appointment.patients?.phone || 'Pending registration'}
                         </div>
+                        {isPhoneBooking && (
+                          <div style={{
+                            fontSize: '0.75rem',
+                            color: '#10b981',
+                            fontWeight: '500'
+                          }}>
+                            📞 Phone appointment
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td style={{ padding: '1rem 0.75rem' }}>

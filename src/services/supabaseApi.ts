@@ -87,6 +87,151 @@ export const getCurrentUser = async () => {
   }
 };
 
+// User management functions
+export const createUser = async (userData: {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  role: string;
+  permissions: string[];
+  is_active: boolean;
+}) => {
+  try {
+    console.log('👤 API: Creating user account:', userData.email);
+    
+    // Check authentication first
+    await checkAuth();
+    
+    // Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email: userData.email,
+      password: userData.password,
+      email_confirm: true, // Auto-confirm email
+      user_metadata: {
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        role: userData.role
+      }
+    });
+    
+    if (authError) {
+      console.error('❌ Error creating auth user:', authError);
+      throw new Error(`Failed to create user account: ${authError.message}`);
+    }
+    
+    // Create user profile in users table
+    const { data: profileData, error: profileError } = await supabase
+      .from('users')
+      .insert([{
+        auth_user_id: authData.user.id,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        email: userData.email,
+        phone: userData.phone,
+        role: userData.role,
+        permissions: userData.permissions,
+        is_active: userData.is_active
+      }])
+      .select()
+      .single();
+    
+    if (profileError) {
+      console.error('❌ Error creating user profile:', profileError);
+      // Clean up auth user if profile creation fails
+      await supabase.auth.admin.deleteUser(authData.user.id);
+      throw new Error(`Failed to create user profile: ${profileError.message}`);
+    }
+    
+    console.log('✅ API: User created successfully');
+    return { authUser: authData.user, profile: profileData };
+  } catch (error) {
+    console.error('❌ CreateUser function error:', error);
+    throw error;
+  }
+};
+
+export const updateUser = async (userId: string, updates: {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  role?: string;
+  permissions?: string[];
+  is_active?: boolean;
+}) => {
+  try {
+    console.log('👤 API: Updating user:', userId);
+    
+    // Check authentication first
+    await checkAuth();
+    
+    const { data, error } = await supabase
+      .from('users')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ Error updating user:', error);
+      throw new Error(`Failed to update user: ${error.message}`);
+    }
+    
+    console.log('✅ API: User updated successfully');
+    return data;
+  } catch (error) {
+    console.error('❌ UpdateUser function error:', error);
+    throw error;
+  }
+};
+
+export const deleteUser = async (userId: string) => {
+  try {
+    console.log('👤 API: Deleting user:', userId);
+    
+    // Check authentication first
+    await checkAuth();
+    
+    // Get auth_user_id from users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('auth_user_id')
+      .eq('id', userId)
+      .single();
+    
+    if (userError) {
+      console.error('❌ Error fetching user:', userError);
+      throw new Error(`Failed to fetch user: ${userError.message}`);
+    }
+    
+    // Delete user from auth
+    const { error: authError } = await supabase.auth.admin.deleteUser(userData.auth_user_id);
+    
+    if (authError) {
+      console.error('❌ Error deleting auth user:', authError);
+      throw new Error(`Failed to delete user account: ${authError.message}`);
+    }
+    
+    // Delete user profile (should cascade due to foreign key)
+    const { error: profileError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', userId);
+    
+    if (profileError) {
+      console.error('❌ Error deleting user profile:', profileError);
+      throw new Error(`Failed to delete user profile: ${profileError.message}`);
+    }
+    
+    console.log('✅ API: User deleted successfully');
+  } catch (error) {
+    console.error('❌ DeleteUser function error:', error);
+    throw error;
+  }
+};
+
 // Helper function to check authentication with better error handling
 const checkAuth = async () => {
   try {
@@ -558,6 +703,72 @@ export const createAppointment = async (appointment: Omit<Appointment, 'id' | 'c
     return data;
   } catch (error) {
     console.error('❌ CreateAppointment function error:', error);
+    throw error;
+  }
+};
+
+export const createPhoneAppointment = async (phoneAppointment: {
+  patient_name: string;
+  phone: string;
+  doctor_id: string;
+  appointment_date: string;
+  appointment_time: string;
+  reason: string;
+  notes?: string;
+}) => {
+  try {
+    console.log('📅 API: Creating phone appointment for:', phoneAppointment.patient_name);
+    
+    // Check authentication first
+    await checkAuth();
+    
+    // Validate required fields
+    if (!phoneAppointment.patient_name || !phoneAppointment.phone || !phoneAppointment.doctor_id || 
+        !phoneAppointment.appointment_date || !phoneAppointment.appointment_time) {
+      throw new Error('Patient name, phone, doctor, date, and time are required');
+    }
+    
+    // Check if patient already exists by phone number
+    const { data: existingPatients, error: patientError } = await supabase
+      .from('patients')
+      .select('id')
+      .ilike('phone', `%${phoneAppointment.phone.slice(-10)}%`)
+      .limit(1);
+    
+    if (patientError) {
+      console.error('❌ Error checking existing patient:', patientError);
+    }
+    
+    // Create appointment with or without patient_id
+    const appointmentData = {
+      doctor_id: phoneAppointment.doctor_id,
+      appointment_date: phoneAppointment.appointment_date,
+      appointment_time: phoneAppointment.appointment_time,
+      reason: phoneAppointment.reason,
+      status: 'scheduled' as const,
+      duration: 30,
+      notes: `Phone booking for ${phoneAppointment.patient_name} (${phoneAppointment.phone})${phoneAppointment.notes ? ` - ${phoneAppointment.notes}` : ''}`,
+      patient_id: existingPatients && existingPatients.length > 0 ? existingPatients[0].id : null
+    };
+    
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert([appointmentData])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ Error creating phone appointment:', error);
+      if (error.code === '42501') {
+        throw new Error('Permission denied. Please check your authentication.');
+      }
+      throw new Error(`Failed to create phone appointment: ${error.message}`);
+    }
+    
+    console.log('✅ API: Phone appointment created successfully');
+    return data;
+  } catch (error) {
+    console.error('❌ CreatePhoneAppointment function error:', error);
     throw error;
   }
 };

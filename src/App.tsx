@@ -9,6 +9,7 @@ import DoctorList from './components/Doctors/DoctorList';
 import DoctorForm from './components/Doctors/DoctorForm';
 import AppointmentList from './components/Appointments/AppointmentList';
 import AppointmentForm from './components/Appointments/AppointmentForm';
+import PhoneAppointmentForm from './components/Appointments/PhoneAppointmentForm';
 import MedicalRecordsList from './components/MedicalRecords/MedicalRecordsList';
 import BillingList from './components/Billing/BillingList';
 import PharmacyDashboard from './components/Pharmacy/PharmacyDashboard';
@@ -23,6 +24,7 @@ import InventoryList from './components/Inventory/InventoryList';
 import AccountsList from './components/Accounts/AccountsList';
 import ReportsDashboard from './components/Reports/ReportsDashboard';
 import Settings from './components/Settings/Settings';
+import UserManagement from './components/Settings/UserManagement';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Home from './pages/Home';
@@ -174,6 +176,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <AppointmentForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/appointments/phone"
+              element={
+                <ProtectedRoute>
+                  <PhoneAppointmentForm />
                 </ProtectedRoute>
               }
             />
@@ -352,6 +362,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/users"
+              element={
+                <ProtectedRoute>
+                  <UserManagement />
                 </ProtectedRoute>
               }
             />

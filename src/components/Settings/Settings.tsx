@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Settings as SettingsIcon, Users, Shield, Bell, Database, Printer, Globe, Percent } from 'lucide-react';
+import UserManagement from './UserManagement';
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
@@ -159,154 +160,7 @@ const Settings: React.FC = () => {
         );
 
       case 'users':
-        return (
-          <div>
-            <h3 style={{
-              fontSize: '1.125rem',
-              fontWeight: '600',
-              marginBottom: '1rem',
-              color: '#374151'
-            }}>
-              User Management & Permissions
-            </h3>
-            
-            <div style={{
-              backgroundColor: '#f9fafb',
-              padding: '1rem',
-              borderRadius: '0.375rem',
-              marginBottom: '1rem'
-            }}>
-              <p style={{
-                fontSize: '0.875rem',
-                color: '#6b7280',
-                margin: 0
-              }}>
-                Configure user roles and module access permissions for your clinic staff.
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '1rem'
-            }}>
-              {[
-                { 
-                  role: 'Admin', 
-                  users: 1, 
-                  permissions: 'Full Access',
-                  modules: ['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Medical Records', 'Pharmacy', 'Medical Shop', 'Purchases', 'Inventory', 'Billing', 'Accounts', 'Reports', 'Settings']
-                },
-                { 
-                  role: 'Doctor', 
-                  users: 5, 
-                  permissions: 'Patient & Medical Records',
-                  modules: ['Dashboard', 'Patients', 'Appointments', 'Medical Records']
-                },
-                { 
-                  role: 'Pharmacist', 
-                  users: 2, 
-                  permissions: 'Pharmacy & Inventory',
-                  modules: ['Dashboard', 'Pharmacy', 'Medical Shop', 'Inventory', 'Purchases']
-                },
-                { 
-                  role: 'Accountant', 
-                  users: 1, 
-                  permissions: 'Financial Reports',
-                  modules: ['Dashboard', 'Billing', 'Accounts', 'Reports']
-                },
-                { 
-                  role: 'Receptionist', 
-                  users: 3, 
-                  permissions: 'Appointments & Basic Info',
-                  modules: ['Dashboard', 'Patients', 'Appointments', 'Medical Shop']
-                }
-              ].map((role) => (
-                <div
-                  key={role.role}
-                  style={{
-                    backgroundColor: 'white',
-                    padding: '1rem',
-                    borderRadius: '0.375rem',
-                    border: '1px solid #e5e7eb'
-                  }}
-                >
-                  <h4 style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    marginBottom: '0.5rem',
-                    color: '#111827'
-                  }}>
-                    {role.role}
-                  </h4>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    marginBottom: '0.5rem'
-                  }}>
-                    {role.users} user(s)
-                  </p>
-                  <p style={{
-                    fontSize: '0.75rem',
-                    color: '#6b7280',
-                    marginBottom: '1rem'
-                  }}>
-                    {role.permissions}
-                  </p>
-                  
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: '0.5rem'
-                    }}>
-                      Module Access:
-                    </div>
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(2, 1fr)',
-                      gap: '0.25rem'
-                    }}>
-                      {['Dashboard', 'Patients', 'Doctors', 'Appointments', 'Medical Records', 'Pharmacy', 'Medical Shop', 'Purchases', 'Inventory', 'Billing', 'Accounts', 'Reports', 'Settings'].map((module) => (
-                        <label key={module} style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          fontSize: '0.75rem'
-                        }}>
-                          <input
-                            type="checkbox"
-                            defaultChecked={role.modules.includes(module)}
-                            style={{ width: '12px', height: '12px' }}
-                          />
-                          <span style={{
-                            color: role.modules.includes(module) ? '#374151' : '#9ca3af'
-                          }}>
-                            {module}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <button style={{
-                    width: '100%',
-                    padding: '0.5rem',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.375rem',
-                    cursor: 'pointer',
-                    fontSize: '0.75rem'
-                  }}>
-                    Update Permissions
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+        return <UserManagement />;
 
       case 'discounts':
         return (
@@ -1284,26 +1138,28 @@ const Settings: React.FC = () => {
           {renderTabContent()}
           
           {/* Save Button */}
-          <div style={{
-            marginTop: '2rem',
-            paddingTop: '1rem',
-            borderTop: '1px solid #e5e7eb',
-            display: 'flex',
-            justifyContent: 'flex-end'
-          }}>
-            <button style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: '500'
+          {activeTab !== 'users' && (
+            <div style={{
+              marginTop: '2rem',
+              paddingTop: '1rem',
+              borderTop: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'flex-end'
             }}>
-              Save Changes
-            </button>
-          </div>
+              <button style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '500'
+              }}>
+                Save Changes
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
