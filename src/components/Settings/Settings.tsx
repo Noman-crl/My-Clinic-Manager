@@ -1,8 +1,81 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Users, Shield, Bell, Database, Printer, Globe, Percent } from 'lucide-react';
+import { Settings as SettingsIcon, Users, Shield, Bell, Database, Printer, Globe, Percent, Check, X } from 'lucide-react';
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
+  const [userPermissions, setUserPermissions] = useState({
+    doctor: {
+      dashboard: true,
+      patients: true,
+      appointments: true,
+      medicalRecords: true,
+      pharmacy: false,
+      inventory: false,
+      billing: false,
+      accounts: false,
+      reports: true,
+      settings: false
+    },
+    pharmacist: {
+      dashboard: true,
+      patients: true,
+      appointments: false,
+      medicalRecords: false,
+      pharmacy: true,
+      inventory: true,
+      billing: true,
+      accounts: false,
+      reports: true,
+      settings: false
+    },
+    accountant: {
+      dashboard: true,
+      patients: false,
+      appointments: false,
+      medicalRecords: false,
+      pharmacy: false,
+      inventory: false,
+      billing: true,
+      accounts: true,
+      reports: true,
+      settings: false
+    },
+    receptionist: {
+      dashboard: true,
+      patients: true,
+      appointments: true,
+      medicalRecords: false,
+      pharmacy: false,
+      inventory: false,
+      billing: false,
+      accounts: false,
+      reports: false,
+      settings: false
+    }
+  });
+
+  const modules = [
+    { key: 'dashboard', name: 'Dashboard', description: 'View clinic overview and statistics' },
+    { key: 'patients', name: 'Patient Management', description: 'Add, edit, and manage patient records' },
+    { key: 'appointments', name: 'Appointments', description: 'Schedule and manage appointments' },
+    { key: 'medicalRecords', name: 'Medical Records', description: 'Access patient medical history' },
+    { key: 'pharmacy', name: 'Pharmacy', description: 'Manage medicine sales and prescriptions' },
+    { key: 'inventory', name: 'Inventory', description: 'Medicine stock and inventory management' },
+    { key: 'billing', name: 'Billing & Invoices', description: 'Generate bills and manage payments' },
+    { key: 'accounts', name: 'Accounts & Finance', description: 'Financial reports and accounting' },
+    { key: 'reports', name: 'Reports & Analytics', description: 'Generate and view reports' },
+    { key: 'settings', name: 'Settings', description: 'System configuration and preferences' }
+  ];
+
+  const updatePermission = (role: string, module: string, value: boolean) => {
+    setUserPermissions(prev => ({
+      ...prev,
+      [role]: {
+        ...prev[role as keyof typeof prev],
+        [module]: value
+      }
+    }));
+  };
 
   const tabs = [
     { id: 'general', label: 'General', icon: SettingsIcon },
@@ -725,68 +798,336 @@ const Settings: React.FC = () => {
               marginBottom: '1rem',
               color: '#374151'
             }}>
-              User Management
+              User Management & Module Access
             </h3>
             
             <div style={{
               backgroundColor: '#f9fafb',
               padding: '1rem',
               borderRadius: '0.375rem',
-              marginBottom: '1rem'
+              marginBottom: '2rem',
+              border: '1px solid #e5e7eb'
             }}>
               <p style={{
                 fontSize: '0.875rem',
                 color: '#6b7280',
                 margin: 0
               }}>
-                Manage user roles and permissions for your clinic staff.
+                Configure which modules each user role can access. Customize permissions to ensure users only see relevant features.
               </p>
             </div>
 
+            {/* Role-based Module Access */}
             <div style={{
+              backgroundColor: 'white',
+              borderRadius: '0.5rem',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              overflow: 'hidden'
+            }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead style={{ backgroundColor: '#f9fafb' }}>
+                    <tr>
+                      <th style={{
+                        padding: '1rem',
+                        textAlign: 'left',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#374151',
+                        minWidth: '250px'
+                      }}>
+                        Module / Feature
+                      </th>
+                      <th style={{
+                        padding: '1rem',
+                        textAlign: 'center',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#374151',
+                        minWidth: '120px'
+                      }}>
+                        Doctor
+                      </th>
+                      <th style={{
+                        padding: '1rem',
+                        textAlign: 'center',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#374151',
+                        minWidth: '120px'
+                      }}>
+                        Pharmacist
+                      </th>
+                      <th style={{
+                        padding: '1rem',
+                        textAlign: 'center',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#374151',
+                        minWidth: '120px'
+                      }}>
+                        Accountant
+                      </th>
+                      <th style={{
+                        padding: '1rem',
+                        textAlign: 'center',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#374151',
+                        minWidth: '120px'
+                      }}>
+                        Receptionist
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {modules.map((module, index) => (
+                      <tr key={module.key} style={{ 
+                        borderTop: index > 0 ? '1px solid #f3f4f6' : 'none',
+                        backgroundColor: index % 2 === 0 ? '#ffffff' : '#f9fafb'
+                      }}>
+                        <td style={{ padding: '1rem' }}>
+                          <div>
+                            <div style={{
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                              color: '#111827',
+                              marginBottom: '0.25rem'
+                            }}>
+                              {module.name}
+                            </div>
+                            <div style={{
+                              fontSize: '0.75rem',
+                              color: '#6b7280'
+                            }}>
+                              {module.description}
+                            </div>
+                          </div>
+                        </td>
+                        
+                        {/* Doctor Column */}
+                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                          <button
+                            onClick={() => updatePermission('doctor', module.key, !userPermissions.doctor[module.key as keyof typeof userPermissions.doctor])}
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '0.375rem',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              margin: '0 auto',
+                              backgroundColor: userPermissions.doctor[module.key as keyof typeof userPermissions.doctor] ? '#10b981' : '#ef4444',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {userPermissions.doctor[module.key as keyof typeof userPermissions.doctor] ? 
+                              <Check size={16} style={{ color: 'white' }} /> : 
+                              <X size={16} style={{ color: 'white' }} />
+                            }
+                          </button>
+                        </td>
+                        
+                        {/* Pharmacist Column */}
+                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                          <button
+                            onClick={() => updatePermission('pharmacist', module.key, !userPermissions.pharmacist[module.key as keyof typeof userPermissions.pharmacist])}
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '0.375rem',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              margin: '0 auto',
+                              backgroundColor: userPermissions.pharmacist[module.key as keyof typeof userPermissions.pharmacist] ? '#10b981' : '#ef4444',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {userPermissions.pharmacist[module.key as keyof typeof userPermissions.pharmacist] ? 
+                              <Check size={16} style={{ color: 'white' }} /> : 
+                              <X size={16} style={{ color: 'white' }} />
+                            }
+                          </button>
+                        </td>
+                        
+                        {/* Accountant Column */}
+                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                          <button
+                            onClick={() => updatePermission('accountant', module.key, !userPermissions.accountant[module.key as keyof typeof userPermissions.accountant])}
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '0.375rem',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              margin: '0 auto',
+                              backgroundColor: userPermissions.accountant[module.key as keyof typeof userPermissions.accountant] ? '#10b981' : '#ef4444',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {userPermissions.accountant[module.key as keyof typeof userPermissions.accountant] ? 
+                              <Check size={16} style={{ color: 'white' }} /> : 
+                              <X size={16} style={{ color: 'white' }} />
+                            }
+                          </button>
+                        </td>
+                        
+                        {/* Receptionist Column */}
+                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                          <button
+                            onClick={() => updatePermission('receptionist', module.key, !userPermissions.receptionist[module.key as keyof typeof userPermissions.receptionist])}
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '0.375rem',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              margin: '0 auto',
+                              backgroundColor: userPermissions.receptionist[module.key as keyof typeof userPermissions.receptionist] ? '#10b981' : '#ef4444',
+                              transition: 'all 0.2s ease'
+                            }}
+                          >
+                            {userPermissions.receptionist[module.key as keyof typeof userPermissions.receptionist] ? 
+                              <Check size={16} style={{ color: 'white' }} /> : 
+                              <X size={16} style={{ color: 'white' }} />
+                            }
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Permission Summary */}
+            <div style={{
+              marginTop: '2rem',
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
               gap: '1rem'
             }}>
-              {[
-                { role: 'Admin', users: 1, permissions: 'Full Access' },
-                { role: 'Doctor', users: 5, permissions: 'Patient & Medical Records' },
-                { role: 'Pharmacist', users: 2, permissions: 'Pharmacy & Inventory' },
-                { role: 'Accountant', users: 1, permissions: 'Financial Reports' },
-                { role: 'Receptionist', users: 3, permissions: 'Appointments & Basic Info' }
-              ].map((role) => (
-                <div
-                  key={role.role}
-                  style={{
-                    backgroundColor: 'white',
-                    padding: '1rem',
-                    borderRadius: '0.375rem',
-                    border: '1px solid #e5e7eb'
-                  }}
-                >
-                  <h4 style={{
-                    fontSize: '1rem',
-                    fontWeight: '600',
-                    marginBottom: '0.5rem',
-                    color: '#111827'
-                  }}>
-                    {role.role}
-                  </h4>
-                  <p style={{
-                    fontSize: '0.875rem',
-                    color: '#6b7280',
-                    marginBottom: '0.5rem'
-                  }}>
-                    {role.users} user(s)
-                  </p>
-                  <p style={{
-                    fontSize: '0.75rem',
-                    color: '#6b7280'
-                  }}>
-                    {role.permissions}
-                  </p>
-                </div>
-              ))}
+              {Object.entries(userPermissions).map(([role, permissions]) => {
+                const enabledCount = Object.values(permissions).filter(Boolean).length;
+                const totalCount = Object.keys(permissions).length;
+                
+                return (
+                  <div
+                    key={role}
+                    style={{
+                      backgroundColor: 'white',
+                      padding: '1rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid #e5e7eb'
+                    }}
+                  >
+                    <h4 style={{
+                      fontSize: '1rem',
+                      fontWeight: '600',
+                      marginBottom: '0.5rem',
+                      color: '#111827',
+                      textTransform: 'capitalize'
+                    }}>
+                      {role}
+                    </h4>
+                    <div style={{
+                      fontSize: '0.875rem',
+                      color: '#6b7280',
+                      marginBottom: '0.5rem'
+                    }}>
+                      {enabledCount} of {totalCount} modules enabled
+                    </div>
+                    <div style={{
+                      width: '100%',
+                      height: '8px',
+                      backgroundColor: '#f3f4f6',
+                      borderRadius: '4px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${(enabledCount / totalCount) * 100}%`,
+                        height: '100%',
+                        backgroundColor: enabledCount > totalCount * 0.7 ? '#10b981' : enabledCount > totalCount * 0.4 ? '#f59e0b' : '#ef4444',
+                        transition: 'width 0.3s ease'
+                      }}></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Quick Actions */}
+            <div style={{
+              marginTop: '2rem',
+              backgroundColor: '#f9fafb',
+              padding: '1.5rem',
+              borderRadius: '0.5rem',
+              border: '1px solid #e5e7eb'
+            }}>
+              <h4 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                marginBottom: '1rem',
+                color: '#374151'
+              }}>
+                Quick Actions
+              </h4>
+              
+              <div style={{
+                display: 'flex',
+                gap: '1rem',
+                flexWrap: 'wrap'
+              }}>
+                <button style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}>
+                  Enable All for Doctors
+                </button>
+                
+                <button style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}>
+                  Reset to Defaults
+                </button>
+                
+                <button style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}>
+                  Copy Permissions
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -1399,6 +1740,18 @@ const Settings: React.FC = () => {
                           borderRadius: '0.25rem'
                         }}>
                           NEW
+                        </span>
+                      )}
+                      {tab.id === 'users' && (
+                        <span style={{
+                          marginLeft: 'auto',
+                          fontSize: '0.75rem',
+                          backgroundColor: isActive ? 'rgba(255,255,255,0.2)' : '#f59e0b',
+                          color: isActive ? 'white' : 'white',
+                          padding: '0.125rem 0.375rem',
+                          borderRadius: '0.25rem'
+                        }}>
+                          UPD
                         </span>
                       )}
                     </button>

@@ -1,35 +1,40 @@
 import React, { useState } from 'react';
-import { BarChart3, PieChart, TrendingUp, FileText, Download, Calendar, Filter, Eye, IndianRupee, CalendarDays, Users } from 'lucide-react';
+import { BarChart3, PieChart, TrendingUp, FileText, Download, Calendar, Filter, Users, Package, DollarSign, Eye } from 'lucide-react';
 
 const ReportsDashboard: React.FC = () => {
   const [dateRange, setDateRange] = useState('month');
-  const [customDateFrom, setCustomDateFrom] = useState('');
-  const [customDateTo, setCustomDateTo] = useState('');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
   const [reportType, setReportType] = useState('financial');
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [reportData, setReportData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
 
-  // Sample report data
+  // Sample report data with totals
   const financialData = {
     revenue: 950000,
     expenses: 576000,
     profit: 374000,
-    profitMargin: 39.4
+    profitMargin: 39.4,
+    totalTransactions: 1247,
+    averageTransaction: 762
   };
 
   const salesData = {
     totalSales: 320000,
     prescriptionSales: 240000,
     otcSales: 80000,
-    averageTicket: 850
+    averageTicket: 850,
+    totalCustomers: 376,
+    totalDiscounts: 15600
   };
 
   const inventoryData = {
     totalItems: 150,
     lowStock: 12,
     expiring: 5,
-    turnoverRate: 4.2
+    turnoverRate: 4.2,
+    totalValue: 2850000,
+    purchaseValue: 1920000
   };
 
   const formatCurrency = (amount: number) => {
@@ -42,458 +47,288 @@ const ReportsDashboard: React.FC = () => {
   };
 
   const getDateRangeText = () => {
-    if (dateRange === 'custom' && customDateFrom && customDateTo) {
-      return `From ${new Date(customDateFrom).toLocaleDateString('en-IN')} to ${new Date(customDateTo).toLocaleDateString('en-IN')}`;
-    }
-    
-    const today = new Date();
     switch (dateRange) {
       case 'today':
-        return `For ${today.toLocaleDateString('en-IN')}`;
+        return 'Today';
       case 'week':
-        const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
-        return `For the week starting ${weekStart.toLocaleDateString('en-IN')}`;
+        return 'This Week';
       case 'month':
-        return `For ${today.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}`;
+        return 'This Month';
       case 'quarter':
-        const quarter = Math.floor(today.getMonth() / 3) + 1;
-        return `For Q${quarter} ${today.getFullYear()}`;
+        return 'This Quarter';
       case 'year':
-        return `For the year ${today.getFullYear()}`;
+        return 'This Year';
+      case 'custom':
+        if (customStartDate && customEndDate) {
+          return `${new Date(customStartDate).toLocaleDateString('en-IN')} - ${new Date(customEndDate).toLocaleDateString('en-IN')}`;
+        }
+        return 'Custom Range';
       default:
-        return `For ${dateRange}`;
+        return 'This Month';
     }
   };
 
-  const generateReportData = (reportName: string) => {
+  const generateReport = (reportName: string) => {
+    // Simulate report generation based on selected date range
+    const baseData = {
+      dateRange: getDateRangeText(),
+      generatedAt: new Date().toLocaleString('en-IN'),
+      period: dateRange
+    };
+
     switch (reportName) {
+      case 'Sales Report with Discounts':
+        setReportData({
+          ...baseData,
+          title: 'Sales Report with Discounts',
+          data: [
+            {
+              saleId: 'SAL-000001',
+              date: '2024-01-15',
+              patientName: 'Rajesh Kumar',
+              age: 65,
+              items: [
+                { name: 'Paracetamol 500mg', qty: 10, price: 35.00, discount: 1.75 },
+                { name: 'Vitamin D3', qty: 1, price: 22.00, discount: 1.10 }
+              ],
+              subtotal: 57.00,
+              seniorDiscount: 2.85,
+              manualDiscount: 0,
+              totalDiscount: 2.85,
+              discountPercent: 5.0,
+              tax: 6.84,
+              total: 60.99,
+              paymentMethod: 'UPI'
+            },
+            {
+              saleId: 'SAL-000002',
+              date: '2024-01-15',
+              patientName: 'Priya Sharma',
+              age: 35,
+              items: [
+                { name: 'Cough Syrup', qty: 1, price: 65.00, discount: 3.25 },
+                { name: 'Amoxicillin 250mg', qty: 20, price: 240.00, discount: 12.00 }
+              ],
+              subtotal: 305.00,
+              seniorDiscount: 0,
+              manualDiscount: 15.25,
+              totalDiscount: 15.25,
+              discountPercent: 5.0,
+              tax: 34.77,
+              total: 324.52,
+              paymentMethod: 'Cash'
+            }
+          ],
+          summary: {
+            totalSales: 385.51,
+            totalDiscount: 18.10,
+            averageDiscount: 4.7,
+            seniorDiscounts: 2.85,
+            manualDiscounts: 15.25,
+            totalTax: 41.61,
+            netAmount: 385.51
+          }
+        });
+        break;
+
       case 'Supplier-wise Medicine Report':
-        return {
+        setReportData({
+          ...baseData,
           title: 'Supplier-wise Medicine Report',
-          period: getDateRangeText(),
-          data: {
-            suppliers: [
-              {
+          data: [
+            {
+              supplier: {
                 name: 'MediCorp Pharmaceuticals',
                 contact: 'Rajesh Kumar',
                 gstin: '27ABCDE1234F1Z5',
-                medicines: [
-                  {
-                    name: 'Paracetamol 500mg',
-                    category: 'Analgesic',
-                    batchNo: 'PAR001',
-                    expiryDate: '2025-12-31',
-                    purchasePrice: 2.50,
-                    sellingPrice: 3.50,
-                    mrp: 4.00,
-                    currentStock: 500,
-                    minStock: 50,
-                    totalPurchased: 1000,
-                    totalSold: 500,
-                    totalValue: 2500,
-                    gstRate: 12
-                  },
-                  {
-                    name: 'Amoxicillin 250mg',
-                    category: 'Antibiotic',
-                    batchNo: 'AMX002',
-                    expiryDate: '2024-06-30',
-                    purchasePrice: 8.00,
-                    sellingPrice: 12.00,
-                    mrp: 15.00,
-                    currentStock: 200,
-                    minStock: 20,
-                    totalPurchased: 500,
-                    totalSold: 300,
-                    totalValue: 4000,
-                    gstRate: 12
-                  }
-                ],
-                totals: {
-                  totalMedicines: 2,
-                  totalPurchaseValue: 6500,
-                  totalCurrentValue: 3500,
-                  totalSoldValue: 5250
-                }
+                phone: '+91-9876543210'
               },
-              {
+              medicines: [
+                {
+                  name: 'Paracetamol 500mg',
+                  category: 'Analgesic',
+                  batch: 'PAR001',
+                  expiry: '2025-12-31',
+                  purchasePrice: 2.50,
+                  sellingPrice: 3.50,
+                  mrp: 4.00,
+                  currentStock: 500,
+                  minStock: 50,
+                  totalPurchased: 1000,
+                  totalSold: 500,
+                  currentValue: 1750.00,
+                  gstRate: 12
+                },
+                {
+                  name: 'Vitamin D3 60K',
+                  category: 'Vitamin',
+                  batch: 'VIT003',
+                  expiry: '2025-08-15',
+                  purchasePrice: 15.00,
+                  sellingPrice: 22.00,
+                  mrp: 25.00,
+                  currentStock: 100,
+                  minStock: 10,
+                  totalPurchased: 200,
+                  totalSold: 100,
+                  currentValue: 2200.00,
+                  gstRate: 12
+                }
+              ],
+              totals: {
+                totalMedicines: 2,
+                totalPurchaseValue: 18000.00,
+                totalCurrentValue: 3950.00,
+                totalSoldValue: 5700.00,
+                lowStockItems: 0
+              }
+            },
+            {
+              supplier: {
                 name: 'HealthPlus Distributors',
                 contact: 'Priya Sharma',
                 gstin: '07FGHIJ5678G2Y6',
-                medicines: [
-                  {
-                    name: 'Cetirizine 10mg',
-                    category: 'Antihistamine',
-                    batchNo: 'CET003',
-                    expiryDate: '2025-08-15',
-                    purchasePrice: 1.80,
-                    sellingPrice: 2.50,
-                    mrp: 3.00,
-                    currentStock: 300,
-                    minStock: 30,
-                    totalPurchased: 600,
-                    totalSold: 300,
-                    totalValue: 1080,
-                    gstRate: 12
-                  },
-                  {
-                    name: 'Vitamin D3 60K',
-                    category: 'Vitamin',
-                    batchNo: 'VIT004',
-                    expiryDate: '2025-10-20',
-                    purchasePrice: 15.00,
-                    sellingPrice: 22.00,
-                    mrp: 25.00,
-                    currentStock: 100,
-                    minStock: 10,
-                    totalPurchased: 200,
-                    totalSold: 100,
-                    totalValue: 3000,
-                    gstRate: 12
-                  }
-                ],
-                totals: {
-                  totalMedicines: 2,
-                  totalPurchaseValue: 4080,
-                  totalCurrentValue: 2040,
-                  totalSoldValue: 2950
+                phone: '+91-9876543211'
+              },
+              medicines: [
+                {
+                  name: 'Amoxicillin 250mg',
+                  category: 'Antibiotic',
+                  batch: 'AMX002',
+                  expiry: '2024-06-30',
+                  purchasePrice: 8.00,
+                  sellingPrice: 12.00,
+                  mrp: 15.00,
+                  currentStock: 15,
+                  minStock: 20,
+                  totalPurchased: 100,
+                  totalSold: 85,
+                  currentValue: 180.00,
+                  gstRate: 12
                 }
+              ],
+              totals: {
+                totalMedicines: 1,
+                totalPurchaseValue: 800.00,
+                totalCurrentValue: 180.00,
+                totalSoldValue: 1020.00,
+                lowStockItems: 1
               }
-            ],
-            grandTotals: {
-              totalSuppliers: 2,
-              totalMedicines: 4,
-              totalPurchaseValue: 10580,
-              totalCurrentValue: 5540,
-              totalSoldValue: 8200
             }
+          ],
+          grandTotal: {
+            totalSuppliers: 2,
+            totalMedicines: 3,
+            totalPurchaseValue: 18800.00,
+            totalCurrentValue: 4130.00,
+            totalSoldValue: 6720.00,
+            totalLowStockItems: 1
           }
-        };
+        });
+        break;
 
-      case 'Sales Report with Discounts':
-        return {
-          title: 'Sales Report with Discounts',
-          period: getDateRangeText(),
+      case 'GSTR-1 Report':
+        setReportData({
+          ...baseData,
+          title: 'GSTR-1 Report (GST Sales Return)',
           data: {
-            sales: [
-              {
-                invoiceNo: 'SAL-000001',
-                date: '2024-01-15',
-                patientName: 'Rajesh Kumar',
-                patientAge: 65,
-                items: [
-                  { medicine: 'Paracetamol 500mg', qty: 10, unitPrice: 3.50, discount: 5, discountAmount: 1.75, total: 33.25 }
-                ],
-                subtotal: 35.00,
-                seniorDiscount: 5, // 5% for age > 60
-                seniorDiscountAmount: 1.75,
-                otherDiscount: 0,
-                totalDiscount: 1.75,
-                taxAmount: 4.20,
-                netAmount: 37.45,
-                paymentMethod: 'cash'
-              },
-              {
-                invoiceNo: 'SAL-000002',
-                date: '2024-01-15',
-                patientName: 'Priya Sharma',
-                patientAge: 35,
-                items: [
-                  { medicine: 'Cetirizine 10mg', qty: 20, unitPrice: 2.50, discount: 0, discountAmount: 0, total: 50.00 }
-                ],
-                subtotal: 50.00,
-                seniorDiscount: 0,
-                seniorDiscountAmount: 0,
-                otherDiscount: 2, // Manual discount
-                totalDiscount: 1.00,
-                taxAmount: 5.88,
-                netAmount: 54.88,
-                paymentMethod: 'upi'
-              },
-              {
-                invoiceNo: 'SAL-000003',
-                date: '2024-01-15',
-                patientName: 'Mohan Lal',
-                patientAge: 72,
-                items: [
-                  { medicine: 'Vitamin D3 60K', qty: 2, unitPrice: 22.00, discount: 10, discountAmount: 4.40, total: 39.60 }
-                ],
-                subtotal: 44.00,
-                seniorDiscount: 10, // 10% for age > 70
-                seniorDiscountAmount: 4.40,
-                otherDiscount: 0,
-                totalDiscount: 4.40,
-                taxAmount: 4.75,
-                netAmount: 44.35,
-                paymentMethod: 'card'
-              }
-            ],
-            summary: {
-              totalSales: 3,
-              totalSubtotal: 129.00,
-              totalSeniorDiscount: 10.15,
-              totalOtherDiscount: 1.00,
-              totalDiscount: 11.15,
-              totalTax: 14.83,
-              totalNetAmount: 136.68,
-              averageDiscount: 8.6
-            }
-          }
-        };
-
-      case 'Profit & Loss Statement':
-        return {
-          title: 'Profit & Loss Statement',
-          period: getDateRangeText(),
-          data: {
-            income: [
-              { account: 'Consultation Income', amount: 450000 },
-              { account: 'Pharmacy Sales', amount: 320000 },
-              { account: 'Diagnostic Income', amount: 180000 },
-              { account: 'Other Income', amount: 25000 }
-            ],
-            expenses: [
-              { account: 'Medicine Purchase', amount: 180000 },
-              { account: 'Staff Salary', amount: 240000 },
-              { account: 'Rent Expense', amount: 120000 },
-              { account: 'Electricity Expense', amount: 36000 },
-              { account: 'Other Expenses', amount: 50000 }
-            ],
-            totals: {
-              totalIncome: 975000,
-              totalExpenses: 626000,
-              netProfit: 349000
-            }
-          }
-        };
-
-      case 'Balance Sheet':
-        return {
-          title: 'Balance Sheet',
-          period: `As on ${new Date().toLocaleDateString('en-IN')}`,
-          data: {
-            assets: [
-              { account: 'Cash in Hand', amount: 50000 },
-              { account: 'Bank Account', amount: 500000 },
-              { account: 'Accounts Receivable', amount: 75000 },
-              { account: 'Medicine Inventory', amount: 200000 },
-              { account: 'Medical Equipment', amount: 1000000 }
-            ],
-            liabilities: [
-              { account: 'Accounts Payable', amount: 45000 },
-              { account: 'GST Payable', amount: 25000 },
-              { account: 'TDS Payable', amount: 8000 },
-              { account: 'Salary Payable', amount: 120000 }
-            ],
-            equity: [
-              { account: 'Owner Equity', amount: 1500000 },
-              { account: 'Retained Earnings', amount: 127000 }
-            ],
-            totals: {
-              totalAssets: 1825000,
-              totalLiabilities: 198000,
-              totalEquity: 1627000
-            }
-          }
-        };
-
-      case 'GSTR1 Report':
-        return {
-          title: 'GSTR1 - Outward Supplies Report',
-          period: getDateRangeText(),
-          gstin: '27ABCDE1234F1Z5',
-          data: {
+            gstin: '27ABCDE1234F1Z5',
+            legalName: 'Ultimate Clinic Pvt Ltd',
+            tradeName: 'Ultimate Clinic',
+            period: 'January 2024',
             b2b: [
-              { 
-                recipient: 'ABC Hospital Pvt Ltd',
-                gstin: '27FGHIJ5678G2Y6',
-                invoiceNo: 'INV-000001',
-                invoiceDate: '2024-01-15',
-                invoiceValue: 11800,
-                taxableValue: 10000,
-                cgst: 900,
-                sgst: 900,
-                igst: 0,
-                gstRate: 18
-              },
               {
-                recipient: 'XYZ Medical Center',
-                gstin: '29KLMNO9012H3X7',
-                invoiceNo: 'INV-000002',
-                invoiceDate: '2024-01-16',
-                invoiceValue: 5600,
-                taxableValue: 5000,
-                cgst: 300,
-                sgst: 300,
-                igst: 0,
-                gstRate: 12
+                gstin: '27XYZAB1234C1Z5',
+                invoices: [
+                  {
+                    invoiceNo: 'INV-2024-001',
+                    date: '2024-01-15',
+                    value: 1180.00,
+                    pos: '27',
+                    reverseCharge: 'N',
+                    invoiceType: 'Regular',
+                    rate: 12,
+                    taxableValue: 1000.00,
+                    igstAmount: 0,
+                    cgstAmount: 60.00,
+                    sgstAmount: 60.00,
+                    cessAmount: 0
+                  }
+                ]
               }
             ],
             b2c: [
               {
-                description: 'Retail Sales - 5% GST',
-                taxableValue: 50000,
-                cgst: 1250,
-                sgst: 1250,
-                igst: 0,
-                gstRate: 5
+                pos: '27',
+                rate: 12,
+                taxableValue: 25000.00,
+                igstAmount: 0,
+                cgstAmount: 1500.00,
+                sgstAmount: 1500.00,
+                cessAmount: 0
               },
               {
-                description: 'Retail Sales - 12% GST',
-                taxableValue: 80000,
-                cgst: 4800,
-                sgst: 4800,
-                igst: 0,
-                gstRate: 12
+                pos: '27',
+                rate: 5,
+                taxableValue: 5000.00,
+                igstAmount: 0,
+                cgstAmount: 125.00,
+                sgstAmount: 125.00,
+                cessAmount: 0
               }
             ],
             summary: {
-              totalTaxableValue: 145000,
-              totalCGST: 7250,
-              totalSGST: 7250,
-              totalIGST: 0,
-              totalTax: 14500,
-              totalInvoiceValue: 159500
+              totalTaxableValue: 31000.00,
+              totalIgst: 0,
+              totalCgst: 1685.00,
+              totalSgst: 1685.00,
+              totalCess: 0,
+              totalTax: 3370.00,
+              totalInvoiceValue: 34370.00
             }
           }
-        };
-
-      case 'Daily Sales Summary':
-        return {
-          title: 'Daily Sales Summary',
-          period: getDateRangeText(),
-          data: {
-            sales: [
-              { time: '09:00-10:00', transactions: 5, amount: 2500, discount: 125 },
-              { time: '10:00-11:00', transactions: 8, amount: 4200, discount: 210 },
-              { time: '11:00-12:00', transactions: 12, amount: 6800, discount: 340 },
-              { time: '12:00-13:00', transactions: 6, amount: 3200, discount: 160 },
-              { time: '14:00-15:00', transactions: 15, amount: 8500, discount: 425 },
-              { time: '15:00-16:00', transactions: 18, amount: 9200, discount: 460 },
-              { time: '16:00-17:00', transactions: 10, amount: 5400, discount: 270 },
-              { time: '17:00-18:00', transactions: 7, amount: 3800, discount: 190 }
-            ],
-            summary: {
-              totalTransactions: 81,
-              totalAmount: 43600,
-              totalDiscount: 2180,
-              averageTicket: 538,
-              averageDiscount: 27
-            }
-          }
-        };
-
-      case 'Stock Level Report':
-        return {
-          title: 'Stock Level Report',
-          period: `As on ${new Date().toLocaleDateString('en-IN')}`,
-          data: {
-            items: [
-              { name: 'Paracetamol 500mg', currentStock: 500, minStock: 50, maxStock: 1000, status: 'Good' },
-              { name: 'Amoxicillin 250mg', currentStock: 15, minStock: 20, maxStock: 200, status: 'Low' },
-              { name: 'Cetirizine 10mg', currentStock: 300, minStock: 30, maxStock: 500, status: 'Good' },
-              { name: 'Omeprazole 20mg', currentStock: 8, minStock: 15, maxStock: 150, status: 'Critical' },
-              { name: 'Vitamin D3 60K', currentStock: 100, minStock: 10, maxStock: 150, status: 'Good' }
-            ],
-            summary: {
-              totalItems: 150,
-              lowStockItems: 12,
-              criticalStockItems: 3,
-              overstockItems: 2
-            }
-          }
-        };
+        });
+        break;
 
       default:
-        return null;
+        setReportData({
+          ...baseData,
+          title: reportName,
+          message: 'Report data will be displayed here'
+        });
     }
-  };
 
-  const viewReport = (reportName: string) => {
-    setLoading(true);
     setSelectedReport(reportName);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const data = generateReportData(reportName);
-      setReportData(data);
-      setLoading(false);
-    }, 1000);
   };
 
-  const downloadReport = (reportName: string, format: 'pdf' | 'excel' | 'csv' = 'pdf') => {
-    const data = generateReportData(reportName);
-    if (!data) return;
+  const downloadReport = (format: string) => {
+    if (!reportData) return;
 
     if (format === 'csv') {
-      downloadCSV(data, reportName);
-    } else if (format === 'excel') {
-      downloadExcel(data, reportName);
-    } else {
-      downloadPDF(data, reportName);
-    }
-  };
-
-  const downloadCSV = (data: any, reportName: string) => {
-    let csvContent = `${data.title}\n${data.period}\n\n`;
-    
-    if (reportName === 'Supplier-wise Medicine Report') {
-      data.data.suppliers.forEach((supplier: any) => {
-        csvContent += `\nSupplier: ${supplier.name}\n`;
-        csvContent += `Contact: ${supplier.contact}\n`;
-        csvContent += `GSTIN: ${supplier.gstin}\n\n`;
-        csvContent += 'Medicine,Category,Batch No,Expiry Date,Purchase Price,Selling Price,MRP,Current Stock,Min Stock,Total Purchased,Total Sold,Total Value,GST Rate\n';
-        supplier.medicines.forEach((medicine: any) => {
-          csvContent += `${medicine.name},${medicine.category},${medicine.batchNo},${medicine.expiryDate},${medicine.purchasePrice},${medicine.sellingPrice},${medicine.mrp},${medicine.currentStock},${medicine.minStock},${medicine.totalPurchased},${medicine.totalSold},${medicine.totalValue},${medicine.gstRate}%\n`;
+      let csvContent = '';
+      
+      if (reportData.title === 'Sales Report with Discounts') {
+        csvContent = 'Sale ID,Date,Patient,Age,Subtotal,Senior Discount,Manual Discount,Total Discount,Tax,Total,Payment Method\n';
+        reportData.data.forEach((sale: any) => {
+          csvContent += `${sale.saleId},${sale.date},${sale.patientName},${sale.age},${sale.subtotal},${sale.seniorDiscount},${sale.manualDiscount},${sale.totalDiscount},${sale.tax},${sale.total},${sale.paymentMethod}\n`;
         });
-        csvContent += `\nSupplier Totals:,,,,,,,,,,,${supplier.totals.totalPurchaseValue},\n\n`;
-      });
-    } else if (reportName === 'Sales Report with Discounts') {
-      csvContent += 'Invoice No,Date,Patient Name,Age,Subtotal,Senior Discount %,Senior Discount Amount,Other Discount,Total Discount,Tax Amount,Net Amount,Payment Method\n';
-      data.data.sales.forEach((sale: any) => {
-        csvContent += `${sale.invoiceNo},${sale.date},${sale.patientName},${sale.patientAge},${sale.subtotal},${sale.seniorDiscount}%,${sale.seniorDiscountAmount},${sale.otherDiscount},${sale.totalDiscount},${sale.taxAmount},${sale.netAmount},${sale.paymentMethod}\n`;
-      });
-    } else if (reportName === 'GSTR1 Report') {
-      csvContent += 'B2B Transactions\n';
-      csvContent += 'Recipient,GSTIN,Invoice No,Invoice Date,Taxable Value,CGST,SGST,IGST,Total\n';
-      data.data.b2b.forEach((item: any) => {
-        csvContent += `${item.recipient},${item.gstin},${item.invoiceNo},${item.invoiceDate},${item.taxableValue},${item.cgst},${item.sgst},${item.igst},${item.invoiceValue}\n`;
-      });
-      
-      csvContent += '\nB2C Transactions\n';
-      csvContent += 'Description,Taxable Value,CGST,SGST,IGST,GST Rate\n';
-      data.data.b2c.forEach((item: any) => {
-        csvContent += `${item.description},${item.taxableValue},${item.cgst},${item.sgst},${item.igst},${item.gstRate}%\n`;
-      });
-    } else if (data.data.income) {
-      csvContent += 'Income\n';
-      csvContent += 'Account,Amount\n';
-      data.data.income.forEach((item: any) => {
-        csvContent += `${item.account},${item.amount}\n`;
-      });
-      
-      csvContent += '\nExpenses\n';
-      csvContent += 'Account,Amount\n';
-      data.data.expenses.forEach((item: any) => {
-        csvContent += `${item.account},${item.amount}\n`;
-      });
+      } else if (reportData.title === 'Supplier-wise Medicine Report') {
+        csvContent = 'Supplier,Medicine,Category,Purchase Price,Selling Price,Current Stock,Min Stock,Current Value\n';
+        reportData.data.forEach((supplier: any) => {
+          supplier.medicines.forEach((medicine: any) => {
+            csvContent += `${supplier.supplier.name},${medicine.name},${medicine.category},${medicine.purchasePrice},${medicine.sellingPrice},${medicine.currentStock},${medicine.minStock},${medicine.currentValue}\n`;
+          });
+        });
+      }
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportData.title.replace(/\s+/g, '_')}_${dateRange}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
     }
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${reportName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  const downloadExcel = (data: any, reportName: string) => {
-    alert(`Excel download for ${reportName} would be implemented with a library like xlsx`);
-  };
-
-  const downloadPDF = (data: any, reportName: string) => {
-    alert(`PDF download for ${reportName} would be implemented with a library like jsPDF`);
   };
 
   const reportCategories = [
@@ -506,7 +341,7 @@ const ReportsDashboard: React.FC = () => {
         'Balance Sheet',
         'Cash Flow Statement',
         'Trial Balance',
-        'GSTR1 Report'
+        'GSTR-1 Report'
       ]
     },
     {
@@ -514,8 +349,8 @@ const ReportsDashboard: React.FC = () => {
       icon: TrendingUp,
       color: '#10b981',
       reports: [
-        'Daily Sales Summary',
         'Sales Report with Discounts',
+        'Daily Sales Summary',
         'Medicine-wise Sales',
         'Doctor-wise Prescriptions',
         'Payment Method Analysis'
@@ -526,8 +361,8 @@ const ReportsDashboard: React.FC = () => {
       icon: PieChart,
       color: '#f59e0b',
       reports: [
-        'Stock Level Report',
         'Supplier-wise Medicine Report',
+        'Stock Level Report',
         'Expiry Analysis',
         'Purchase Analysis',
         'ABC Analysis'
@@ -547,70 +382,107 @@ const ReportsDashboard: React.FC = () => {
     }
   ];
 
-  const renderReportView = () => {
-    if (!reportData) return null;
-
+  if (selectedReport && reportData) {
     return (
-      <div style={{
-        backgroundColor: 'white',
-        padding: '2rem',
-        borderRadius: '0.5rem',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        marginTop: '2rem'
-      }}>
+      <div>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '2rem',
-          borderBottom: '2px solid #e5e7eb',
-          paddingBottom: '1rem'
+          marginBottom: '2rem'
         }}>
           <div>
-            <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#111827',
-              marginBottom: '0.5rem'
-            }}>
-              {reportData.title}
-            </h2>
-            <p style={{
-              fontSize: '0.875rem',
-              color: '#6b7280'
-            }}>
-              {reportData.period}
-            </p>
-            {reportData.gstin && (
-              <p style={{
-                fontSize: '0.875rem',
-                color: '#6b7280'
-              }}>
-                GSTIN: {reportData.gstin}
-              </p>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
-              onClick={() => downloadReport(selectedReport!, 'csv')}
+              onClick={() => {
+                setSelectedReport(null);
+                setReportData(null);
+              }}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
                 padding: '0.5rem 1rem',
-                backgroundColor: '#10b981',
-                color: 'white',
-                border: 'none',
+                backgroundColor: '#f3f4f6',
+                color: '#374151',
+                border: '1px solid #d1d5db',
                 borderRadius: '0.375rem',
                 cursor: 'pointer',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                marginBottom: '0.5rem'
               }}
             >
-              <Download size={16} />
-              CSV
+              ← Back to Reports
             </button>
+            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0 }}>
+              {reportData.title}
+            </h1>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
+              Period: {reportData.dateRange} | Generated: {reportData.generatedAt}
+            </p>
+          </div>
+          
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {/* Date Selection in Report View */}
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <Calendar size={16} style={{ color: '#6b7280' }} />
+              <select
+                value={dateRange}
+                onChange={(e) => {
+                  setDateRange(e.target.value);
+                  generateReport(selectedReport);
+                }}
+                style={{
+                  padding: '0.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  outline: 'none'
+                }}
+              >
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="quarter">This Quarter</option>
+                <option value="year">This Year</option>
+                <option value="custom">Custom Range</option>
+              </select>
+              
+              {dateRange === 'custom' && (
+                <>
+                  <input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => {
+                      setCustomStartDate(e.target.value);
+                      if (customEndDate) generateReport(selectedReport);
+                    }}
+                    style={{
+                      padding: '0.5rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <span style={{ color: '#6b7280' }}>to</span>
+                  <input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => {
+                      setCustomEndDate(e.target.value);
+                      if (customStartDate) generateReport(selectedReport);
+                    }}
+                    style={{
+                      padding: '0.5rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      outline: 'none'
+                    }}
+                  />
+                </>
+              )}
+            </div>
+            
             <button
-              onClick={() => downloadReport(selectedReport!, 'excel')}
+              onClick={() => downloadReport('csv')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -621,608 +493,509 @@ const ReportsDashboard: React.FC = () => {
                 border: 'none',
                 borderRadius: '0.375rem',
                 cursor: 'pointer',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                fontWeight: '500'
               }}
             >
               <Download size={16} />
-              Excel
-            </button>
-            <button
-              onClick={() => downloadReport(selectedReport!, 'pdf')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#ef4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: 'pointer',
-                fontSize: '0.875rem'
-              }}
-            >
-              <Download size={16} />
-              PDF
-            </button>
-            <button
-              onClick={() => setSelectedReport(null)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#6b7280',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                cursor: 'pointer',
-                fontSize: '0.875rem'
-              }}
-            >
-              Close
+              Download CSV
             </button>
           </div>
         </div>
 
-        {/* Supplier-wise Medicine Report */}
-        {selectedReport === 'Supplier-wise Medicine Report' && (
-          <div>
-            {reportData.data.suppliers.map((supplier: any, supplierIndex: number) => (
-              <div key={supplierIndex} style={{ marginBottom: '3rem' }}>
-                <div style={{
-                  backgroundColor: '#f9fafb',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
+        {/* Report Content */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '0.5rem',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          overflow: 'hidden'
+        }}>
+          {reportData.title === 'Sales Report with Discounts' && (
+            <div>
+              {/* Summary Cards */}
+              <div style={{
+                padding: '1.5rem',
+                borderBottom: '1px solid #e5e7eb',
+                backgroundColor: '#f9fafb'
+              }}>
+                <h3 style={{
+                  fontSize: '1.125rem',
+                  fontWeight: '600',
                   marginBottom: '1rem',
+                  color: '#374151'
+                }}>
+                  Sales Summary - {reportData.dateRange}
+                </h3>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem'
+                }}>
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                      Total Sales
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>
+                      {formatCurrency(reportData.summary.totalSales)}
+                    </div>
+                  </div>
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                      Total Discounts
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ef4444' }}>
+                      {formatCurrency(reportData.summary.totalDiscount)}
+                    </div>
+                  </div>
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                      Average Discount
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f59e0b' }}>
+                      {reportData.summary.averageDiscount}%
+                    </div>
+                  </div>
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                      Senior Discounts
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#8b5cf6' }}>
+                      {formatCurrency(reportData.summary.seniorDiscounts)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Sales Table */}
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead style={{ backgroundColor: '#f9fafb' }}>
+                    <tr>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>
+                        Sale Details
+                      </th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>
+                        Patient (Age)
+                      </th>
+                      <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>
+                        Subtotal
+                      </th>
+                      <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>
+                        Senior Discount
+                      </th>
+                      <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>
+                        Manual Discount
+                      </th>
+                      <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>
+                        Total Discount
+                      </th>
+                      <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>
+                        Tax
+                      </th>
+                      <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>
+                        Final Total
+                      </th>
+                      <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>
+                        Payment
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reportData.data.map((sale: any, index: number) => (
+                      <tr key={index} style={{ borderTop: '1px solid #f3f4f6' }}>
+                        <td style={{ padding: '1rem 0.75rem' }}>
+                          <div>
+                            <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
+                              {sale.saleId}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                              {new Date(sale.date).toLocaleDateString('en-IN')}
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '1rem 0.75rem' }}>
+                          <div>
+                            <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
+                              {sale.patientName}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                              Age: {sale.age} years
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '1rem 0.75rem', textAlign: 'right' }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
+                            {formatCurrency(sale.subtotal)}
+                          </span>
+                        </td>
+                        <td style={{ padding: '1rem 0.75rem', textAlign: 'right' }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '500', color: sale.seniorDiscount > 0 ? '#8b5cf6' : '#6b7280' }}>
+                            {sale.seniorDiscount > 0 ? `-${formatCurrency(sale.seniorDiscount)}` : '-'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '1rem 0.75rem', textAlign: 'right' }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '500', color: sale.manualDiscount > 0 ? '#ef4444' : '#6b7280' }}>
+                            {sale.manualDiscount > 0 ? `-${formatCurrency(sale.manualDiscount)}` : '-'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '1rem 0.75rem', textAlign: 'right' }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#ef4444' }}>
+                            -{formatCurrency(sale.totalDiscount)} ({sale.discountPercent}%)
+                          </span>
+                        </td>
+                        <td style={{ padding: '1rem 0.75rem', textAlign: 'right' }}>
+                          <span style={{ fontSize: '0.875rem', color: '#111827' }}>
+                            {formatCurrency(sale.tax)}
+                          </span>
+                        </td>
+                        <td style={{ padding: '1rem 0.75rem', textAlign: 'right' }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#10b981' }}>
+                            {formatCurrency(sale.total)}
+                          </span>
+                        </td>
+                        <td style={{ padding: '1rem 0.75rem' }}>
+                          <span style={{
+                            display: 'inline-flex',
+                            padding: '0.25rem 0.5rem',
+                            fontSize: '0.75rem',
+                            fontWeight: '500',
+                            borderRadius: '0.375rem',
+                            backgroundColor: sale.paymentMethod === 'UPI' ? '#dbeafe' : '#d1fae5',
+                            color: sale.paymentMethod === 'UPI' ? '#1e40af' : '#065f46'
+                          }}>
+                            {sale.paymentMethod}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {reportData.title === 'Supplier-wise Medicine Report' && (
+            <div>
+              {/* Grand Total Summary */}
+              <div style={{
+                padding: '1.5rem',
+                borderBottom: '1px solid #e5e7eb',
+                backgroundColor: '#f9fafb'
+              }}>
+                <h3 style={{
+                  fontSize: '1.125rem',
+                  fontWeight: '600',
+                  marginBottom: '1rem',
+                  color: '#374151'
+                }}>
+                  Supplier Summary - {reportData.dateRange}
+                </h3>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem'
+                }}>
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                      Total Suppliers
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#3b82f6' }}>
+                      {reportData.grandTotal.totalSuppliers}
+                    </div>
+                  </div>
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                      Total Medicines
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>
+                      {reportData.grandTotal.totalMedicines}
+                    </div>
+                  </div>
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                      Current Inventory Value
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f59e0b' }}>
+                      {formatCurrency(reportData.grandTotal.totalCurrentValue)}
+                    </div>
+                  </div>
+                  <div style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                      Low Stock Items
+                    </div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ef4444' }}>
+                      {reportData.grandTotal.totalLowStockItems}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Supplier Details */}
+              <div style={{ padding: '1.5rem' }}>
+                {reportData.data.map((supplier: any, index: number) => (
+                  <div key={index} style={{
+                    marginBottom: index < reportData.data.length - 1 ? '2rem' : 0,
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    overflow: 'hidden'
+                  }}>
+                    {/* Supplier Header */}
+                    <div style={{
+                      backgroundColor: '#f9fafb',
+                      padding: '1rem',
+                      borderBottom: '1px solid #e5e7eb'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start'
+                      }}>
+                        <div>
+                          <h4 style={{
+                            fontSize: '1.125rem',
+                            fontWeight: '600',
+                            color: '#111827',
+                            marginBottom: '0.25rem'
+                          }}>
+                            {supplier.supplier.name}
+                          </h4>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            Contact: {supplier.supplier.contact} | GSTIN: {supplier.supplier.gstin}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            Current Value
+                          </div>
+                          <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#10b981' }}>
+                            {formatCurrency(supplier.totals.totalCurrentValue)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Medicines Table */}
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead style={{ backgroundColor: '#f3f4f6' }}>
+                          <tr>
+                            <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280' }}>
+                              Medicine Details
+                            </th>
+                            <th style={{ padding: '0.75rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280' }}>
+                              Batch & Expiry
+                            </th>
+                            <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280' }}>
+                              Purchase Price
+                            </th>
+                            <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280' }}>
+                              Selling Price
+                            </th>
+                            <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280' }}>
+                              Stock Status
+                            </th>
+                            <th style={{ padding: '0.75rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '500', color: '#6b7280' }}>
+                              Current Value
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {supplier.medicines.map((medicine: any, medIndex: number) => (
+                            <tr key={medIndex} style={{ borderTop: '1px solid #f3f4f6' }}>
+                              <td style={{ padding: '0.75rem' }}>
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
+                                    {medicine.name}
+                                  </div>
+                                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                    {medicine.category} | GST: {medicine.gstRate}%
+                                  </div>
+                                </div>
+                              </td>
+                              <td style={{ padding: '0.75rem' }}>
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', color: '#111827' }}>
+                                    {medicine.batch}
+                                  </div>
+                                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                    Exp: {new Date(medicine.expiry).toLocaleDateString('en-IN')}
+                                  </div>
+                                </div>
+                              </td>
+                              <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                                <span style={{ fontSize: '0.875rem', color: '#111827' }}>
+                                  {formatCurrency(medicine.purchasePrice)}
+                                </span>
+                              </td>
+                              <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                                <div>
+                                  <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
+                                    {formatCurrency(medicine.sellingPrice)}
+                                  </div>
+                                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                    MRP: {formatCurrency(medicine.mrp)}
+                                  </div>
+                                </div>
+                              </td>
+                              <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                                <div>
+                                  <div style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: '500',
+                                    color: medicine.currentStock <= medicine.minStock ? '#ef4444' : '#111827'
+                                  }}>
+                                    {medicine.currentStock}
+                                  </div>
+                                  <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                    Min: {medicine.minStock}
+                                  </div>
+                                </div>
+                              </td>
+                              <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                                <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#10b981' }}>
+                                  {formatCurrency(medicine.currentValue)}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {reportData.title === 'GSTR-1 Report (GST Sales Return)' && (
+            <div style={{ padding: '1.5rem' }}>
+              <div style={{
+                backgroundColor: '#f9fafb',
+                padding: '1rem',
+                borderRadius: '0.375rem',
+                marginBottom: '1.5rem'
+              }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                  GST Return Summary
+                </h3>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                  GSTIN: {reportData.data.gstin} | Period: {reportData.data.period}
+                </div>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1rem',
+                marginBottom: '2rem'
+              }}>
+                <div style={{
+                  backgroundColor: 'white',
+                  padding: '1rem',
+                  borderRadius: '0.375rem',
                   border: '1px solid #e5e7eb'
                 }}>
-                  <h3 style={{
-                    fontSize: '1.25rem',
-                    fontWeight: '600',
-                    color: '#111827',
-                    marginBottom: '0.5rem'
-                  }}>
-                    {supplier.name}
-                  </h3>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '1rem',
-                    fontSize: '0.875rem',
-                    color: '#6b7280'
-                  }}>
-                    <div>Contact: {supplier.contact}</div>
-                    <div>GSTIN: {supplier.gstin}</div>
-                    <div>Total Medicines: {supplier.totals.totalMedicines}</div>
-                    <div>Total Value: {formatCurrency(supplier.totals.totalPurchaseValue)}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                    Total Taxable Value
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#3b82f6' }}>
+                    {formatCurrency(reportData.data.summary.totalTaxableValue)}
                   </div>
                 </div>
-
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead style={{ backgroundColor: '#f9fafb' }}>
-                      <tr>
-                        <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem' }}>Medicine</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem' }}>Category</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem' }}>Batch/Expiry</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem' }}>Purchase Price</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem' }}>Selling Price</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem' }}>MRP</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem' }}>Stock</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem' }}>Total Value</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontSize: '0.875rem' }}>GST</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {supplier.medicines.map((medicine: any, index: number) => (
-                        <tr key={index}>
-                          <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
-                            <div style={{ fontWeight: '500' }}>{medicine.name}</div>
-                          </td>
-                          <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>{medicine.category}</td>
-                          <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
-                            <div style={{ fontSize: '0.875rem' }}>
-                              <div>Batch: {medicine.batchNo}</div>
-                              <div style={{ color: '#6b7280' }}>Exp: {new Date(medicine.expiryDate).toLocaleDateString('en-IN')}</div>
-                            </div>
-                          </td>
-                          <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(medicine.purchasePrice)}</td>
-                          <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(medicine.sellingPrice)}</td>
-                          <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(medicine.mrp)}</td>
-                          <td style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #f3f4f6' }}>
-                            <div style={{ fontSize: '0.875rem' }}>
-                              <div style={{ fontWeight: '500' }}>{medicine.currentStock}</div>
-                              <div style={{ color: '#6b7280' }}>Min: {medicine.minStock}</div>
-                            </div>
-                          </td>
-                          <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(medicine.totalValue)}</td>
-                          <td style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #f3f4f6' }}>{medicine.gstRate}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
                 <div style={{
-                  backgroundColor: '#f3f4f6',
+                  backgroundColor: 'white',
                   padding: '1rem',
-                  borderRadius: '0.5rem',
-                  marginTop: '1rem'
+                  borderRadius: '0.375rem',
+                  border: '1px solid #e5e7eb'
                 }}>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                    gap: '1rem',
-                    fontSize: '0.875rem'
-                  }}>
-                    <div>
-                      <div style={{ color: '#6b7280' }}>Total Purchase Value</div>
-                      <div style={{ fontWeight: '600', fontSize: '1rem' }}>{formatCurrency(supplier.totals.totalPurchaseValue)}</div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#6b7280' }}>Current Stock Value</div>
-                      <div style={{ fontWeight: '600', fontSize: '1rem' }}>{formatCurrency(supplier.totals.totalCurrentValue)}</div>
-                    </div>
-                    <div>
-                      <div style={{ color: '#6b7280' }}>Total Sold Value</div>
-                      <div style={{ fontWeight: '600', fontSize: '1rem', color: '#10b981' }}>{formatCurrency(supplier.totals.totalSoldValue)}</div>
-                    </div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                    Total CGST
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>
+                    {formatCurrency(reportData.data.summary.totalCgst)}
                   </div>
                 </div>
-              </div>
-            ))}
-
-            <div style={{
-              backgroundColor: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              border: '2px solid #e5e7eb'
-            }}>
-              <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                color: '#374151'
-              }}>
-                Grand Summary
-              </h3>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                gap: '1rem'
-              }}>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Suppliers</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{reportData.data.grandTotals.totalSuppliers}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Medicines</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{reportData.data.grandTotals.totalMedicines}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Purchase Value</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#3b82f6' }}>{formatCurrency(reportData.data.grandTotals.totalPurchaseValue)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Current Stock Value</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f59e0b' }}>{formatCurrency(reportData.data.grandTotals.totalCurrentValue)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Sold Value</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>{formatCurrency(reportData.data.grandTotals.totalSoldValue)}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Sales Report with Discounts */}
-        {selectedReport === 'Sales Report with Discounts' && (
-          <div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead style={{ backgroundColor: '#f9fafb' }}>
-                  <tr>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Invoice</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Patient</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Subtotal</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Senior Discount</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Other Discount</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Total Discount</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Tax</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Net Amount</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Payment</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reportData.data.sales.map((sale: any, index: number) => (
-                    <tr key={index}>
-                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
-                        <div>
-                          <div style={{ fontWeight: '500' }}>{sale.invoiceNo}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{sale.date}</div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
-                        <div>
-                          <div style={{ fontWeight: '500' }}>{sale.patientName}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Age: {sale.patientAge}</div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(sale.subtotal)}</td>
-                      <td style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #f3f4f6' }}>
-                        {sale.seniorDiscount > 0 && (
-                          <div>
-                            <div style={{ color: '#10b981', fontWeight: '500' }}>{sale.seniorDiscount}%</div>
-                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{formatCurrency(sale.seniorDiscountAmount)}</div>
-                          </div>
-                        )}
-                        {sale.seniorDiscount === 0 && <span style={{ color: '#9ca3af' }}>-</span>}
-                      </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>
-                        {sale.otherDiscount > 0 ? `${sale.otherDiscount}%` : '-'}
-                      </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>
-                        <span style={{ color: '#ef4444', fontWeight: '500' }}>{formatCurrency(sale.totalDiscount)}</span>
-                      </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(sale.taxAmount)}</td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>
-                        <span style={{ fontWeight: '600' }}>{formatCurrency(sale.netAmount)}</span>
-                      </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #f3f4f6' }}>
-                        <span style={{
-                          padding: '0.25rem 0.5rem',
-                          backgroundColor: sale.paymentMethod === 'cash' ? '#d1fae5' : sale.paymentMethod === 'upi' ? '#fef3c7' : '#dbeafe',
-                          color: sale.paymentMethod === 'cash' ? '#065f46' : sale.paymentMethod === 'upi' ? '#92400e' : '#1e40af',
-                          borderRadius: '0.25rem',
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase'
-                        }}>
-                          {sale.paymentMethod}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div style={{
-              backgroundColor: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              marginTop: '2rem',
-              border: '2px solid #e5e7eb'
-            }}>
-              <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                color: '#374151'
-              }}>
-                Sales Summary
-              </h3>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                gap: '1rem'
-              }}>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Sales</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>{reportData.data.summary.totalSales}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Subtotal</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>{formatCurrency(reportData.data.summary.totalSubtotal)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Senior Discounts</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#10b981' }}>{formatCurrency(reportData.data.summary.totalSeniorDiscount)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Other Discounts</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#f59e0b' }}>{formatCurrency(reportData.data.summary.totalOtherDiscount)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Discounts</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#ef4444' }}>{formatCurrency(reportData.data.summary.totalDiscount)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Net Amount</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#3b82f6' }}>{formatCurrency(reportData.data.summary.totalNetAmount)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Avg Discount %</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>{reportData.data.summary.averageDiscount}%</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* GSTR1 Report */}
-        {selectedReport === 'GSTR1 Report' && (
-          <div>
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                color: '#374151'
-              }}>
-                B2B Transactions
-              </h3>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead style={{ backgroundColor: '#f9fafb' }}>
-                    <tr>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Recipient</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>GSTIN</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Invoice No</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Date</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Taxable Value</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>CGST</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>SGST</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.data.b2b.map((item: any, index: number) => (
-                      <tr key={index}>
-                        <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>{item.recipient}</td>
-                        <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>{item.gstin}</td>
-                        <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>{item.invoiceNo}</td>
-                        <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>{item.invoiceDate}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(item.taxableValue)}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(item.cgst)}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(item.sgst)}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(item.invoiceValue)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                color: '#374151'
-              }}>
-                B2C Transactions
-              </h3>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead style={{ backgroundColor: '#f9fafb' }}>
-                    <tr>
-                      <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Description</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Taxable Value</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>CGST</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>SGST</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>GST Rate</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reportData.data.b2c.map((item: any, index: number) => (
-                      <tr key={index}>
-                        <td style={{ padding: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>{item.description}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(item.taxableValue)}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(item.cgst)}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #f3f4f6' }}>{formatCurrency(item.sgst)}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'center', borderBottom: '1px solid #f3f4f6' }}>{item.gstRate}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div style={{
-              backgroundColor: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              border: '2px solid #e5e7eb'
-            }}>
-              <h3 style={{
-                fontSize: '1.125rem',
-                fontWeight: '600',
-                marginBottom: '1rem',
-                color: '#374151'
-              }}>
-                Summary
-              </h3>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                gap: '1rem'
-              }}>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Taxable Value</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>{formatCurrency(reportData.data.summary.totalTaxableValue)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total CGST</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>{formatCurrency(reportData.data.summary.totalCGST)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total SGST</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>{formatCurrency(reportData.data.summary.totalSGST)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Tax</div>
-                  <div style={{ fontSize: '1.125rem', fontWeight: '600', color: '#ef4444' }}>{formatCurrency(reportData.data.summary.totalTax)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Invoice Value</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#10b981' }}>{formatCurrency(reportData.data.summary.totalInvoiceValue)}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {selectedReport === 'Profit & Loss Statement' && (
-          <div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '2rem'
-            }}>
-              <div>
-                <h3 style={{
-                  fontSize: '1.125rem',
-                  fontWeight: '600',
-                  marginBottom: '1rem',
-                  color: '#10b981'
-                }}>
-                  Income
-                </h3>
-                {reportData.data.income.map((item: any, index: number) => (
-                  <div key={index} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '0.5rem 0',
-                    borderBottom: '1px solid #f3f4f6'
-                  }}>
-                    <span>{item.account}</span>
-                    <span style={{ fontWeight: '500' }}>{formatCurrency(item.amount)}</span>
-                  </div>
-                ))}
                 <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '1rem 0',
-                  borderTop: '2px solid #10b981',
-                  marginTop: '1rem',
-                  fontWeight: 'bold',
-                  fontSize: '1.125rem'
+                  backgroundColor: 'white',
+                  padding: '1rem',
+                  borderRadius: '0.375rem',
+                  border: '1px solid #e5e7eb'
                 }}>
-                  <span>Total Income</span>
-                  <span style={{ color: '#10b981' }}>{formatCurrency(reportData.data.totals.totalIncome)}</span>
-                </div>
-              </div>
-
-              <div>
-                <h3 style={{
-                  fontSize: '1.125rem',
-                  fontWeight: '600',
-                  marginBottom: '1rem',
-                  color: '#ef4444'
-                }}>
-                  Expenses
-                </h3>
-                {reportData.data.expenses.map((item: any, index: number) => (
-                  <div key={index} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    padding: '0.5rem 0',
-                    borderBottom: '1px solid #f3f4f6'
-                  }}>
-                    <span>{item.account}</span>
-                    <span style={{ fontWeight: '500' }}>{formatCurrency(item.amount)}</span>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                    Total SGST
                   </div>
-                ))}
+                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f59e0b' }}>
+                    {formatCurrency(reportData.data.summary.totalSgst)}
+                  </div>
+                </div>
                 <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '1rem 0',
-                  borderTop: '2px solid #ef4444',
-                  marginTop: '1rem',
-                  fontWeight: 'bold',
-                  fontSize: '1.125rem'
+                  backgroundColor: 'white',
+                  padding: '1rem',
+                  borderRadius: '0.375rem',
+                  border: '1px solid #e5e7eb'
                 }}>
-                  <span>Total Expenses</span>
-                  <span style={{ color: '#ef4444' }}>{formatCurrency(reportData.data.totals.totalExpenses)}</span>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                    Total Tax
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ef4444' }}>
+                    {formatCurrency(reportData.data.summary.totalTax)}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div style={{
-              backgroundColor: '#f9fafb',
-              padding: '1.5rem',
-              borderRadius: '0.5rem',
-              marginTop: '2rem',
-              border: '2px solid #e5e7eb'
-            }}>
               <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
+                backgroundColor: '#f9fafb',
+                padding: '1rem',
+                borderRadius: '0.375rem',
+                textAlign: 'center'
               }}>
-                <span style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 'bold'
-                }}>
-                  Net Profit
-                </span>
-                <span style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 'bold',
-                  color: reportData.data.totals.netProfit > 0 ? '#10b981' : '#ef4444'
-                }}>
-                  {formatCurrency(reportData.data.totals.netProfit)}
-                </span>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
+                  This report is ready for GSTR-1 filing. Download as CSV for import into GST portal.
+                </p>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Add other report renderers as needed */}
-        {selectedReport && !['Supplier-wise Medicine Report', 'Sales Report with Discounts', 'GSTR1 Report', 'Profit & Loss Statement'].includes(selectedReport) && (
-          <div style={{
-            textAlign: 'center',
-            padding: '3rem',
-            color: '#6b7280'
-          }}>
-            <FileText size={48} style={{ margin: '0 auto 1rem', color: '#d1d5db' }} />
-            <p>Report view for "{selectedReport}" is being prepared.</p>
-            <p style={{ fontSize: '0.875rem' }}>This report contains detailed data and will be available for download.</p>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  if (selectedReport && loading) {
-    return (
-      <div>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>Reports & Analytics</h1>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '400px',
-          gap: '1rem'
-        }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            border: '2px solid #3b82f6',
-            borderTop: '2px solid transparent',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-            Generating {selectedReport}...
-          </p>
+          )}
         </div>
-      </div>
-    );
-  }
-
-  if (selectedReport && reportData) {
-    return (
-      <div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1rem'
-        }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Reports & Analytics</h1>
-        </div>
-        {renderReportView()}
       </div>
     );
   }
@@ -1236,52 +1009,14 @@ const ReportsDashboard: React.FC = () => {
         marginBottom: '2rem'
       }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 'bold' }}>Reports & Analytics</h1>
-      </div>
-
-      {/* Date Range Selection */}
-      <div style={{
-        backgroundColor: 'white',
-        padding: '1.5rem',
-        borderRadius: '0.5rem',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        marginBottom: '2rem',
-        border: '1px solid #e5e7eb'
-      }}>
-        <h3 style={{
-          fontSize: '1.125rem',
-          fontWeight: '600',
-          marginBottom: '1rem',
-          color: '#374151',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
-          <CalendarDays size={20} />
-          Select Date Range for Reports
-        </h3>
-        
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem',
-          alignItems: 'end'
-        }}>
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#374151',
-              marginBottom: '0.5rem'
-            }}>
-              Quick Select
-            </label>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <Calendar size={16} style={{ color: '#6b7280' }} />
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
               style={{
-                width: '100%',
-                padding: '0.75rem',
+                padding: '0.5rem',
                 border: '1px solid #d1d5db',
                 borderRadius: '0.375rem',
                 fontSize: '0.875rem',
@@ -1295,87 +1030,52 @@ const ReportsDashboard: React.FC = () => {
               <option value="year">This Year</option>
               <option value="custom">Custom Range</option>
             </select>
+            
+            {dateRange === 'custom' && (
+              <>
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  style={{
+                    padding: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
+                />
+                <span style={{ color: '#6b7280' }}>to</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  style={{
+                    padding: '0.5rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
+                />
+              </>
+            )}
           </div>
           
-          {dateRange === 'custom' && (
-            <>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '0.5rem'
-                }}>
-                  From Date
-                </label>
-                <input
-                  type="date"
-                  value={customDateFrom}
-                  onChange={(e) => setCustomDateFrom(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-              
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '0.5rem'
-                }}>
-                  To Date
-                </label>
-                <input
-                  type="date"
-                  value={customDateTo}
-                  onChange={(e) => setCustomDateTo(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none'
-                  }}
-                />
-              </div>
-            </>
-          )}
-          
           <div style={{
-            backgroundColor: '#f9fafb',
-            padding: '0.75rem',
+            padding: '0.5rem 1rem',
+            backgroundColor: '#f3f4f6',
             borderRadius: '0.375rem',
-            border: '1px solid #e5e7eb'
+            fontSize: '0.875rem',
+            color: '#374151',
+            fontWeight: '500'
           }}>
-            <div style={{
-              fontSize: '0.875rem',
-              color: '#6b7280',
-              marginBottom: '0.25rem'
-            }}>
-              Selected Period
-            </div>
-            <div style={{
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#111827'
-            }}>
-              {getDateRangeText()}
-            </div>
+            Period: {getDateRangeText()}
           </div>
         </div>
       </div>
 
-      {/* Key Metrics */}
+      {/* Key Metrics with Totals */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
@@ -1427,56 +1127,7 @@ const ReportsDashboard: React.FC = () => {
             fontSize: '0.75rem',
             color: '#6b7280'
           }}>
-            +12.5% from last period
-          </div>
-        </div>
-
-        <div style={{
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '1rem'
-          }}>
-            <div>
-              <p style={{
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                color: '#6b7280'
-              }}>
-                Net Profit
-              </p>
-              <p style={{
-                fontSize: '1.5rem',
-                fontWeight: 'bold',
-                color: '#3b82f6'
-              }}>
-                {formatCurrency(financialData.profit)}
-              </p>
-            </div>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              backgroundColor: '#dbeafe',
-              borderRadius: '0.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <BarChart3 size={20} style={{ color: '#3b82f6' }} />
-            </div>
-          </div>
-          <div style={{
-            fontSize: '0.75rem',
-            color: '#6b7280'
-          }}>
-            {financialData.profitMargin}% profit margin
+            {financialData.totalTransactions} transactions | Avg: {formatCurrency(financialData.averageTransaction)}
           </div>
         </div>
 
@@ -1525,7 +1176,7 @@ const ReportsDashboard: React.FC = () => {
             fontSize: '0.75rem',
             color: '#6b7280'
           }}>
-            Avg ticket: {formatCurrency(salesData.averageTicket)}
+            {salesData.totalCustomers} customers | Discounts: {formatCurrency(salesData.totalDiscounts)}
           </div>
         </div>
 
@@ -1548,33 +1199,82 @@ const ReportsDashboard: React.FC = () => {
                 fontWeight: '500',
                 color: '#6b7280'
               }}>
-                Total Discounts Given
+                Inventory Value
               </p>
               <p style={{
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
-                color: '#ef4444'
+                color: '#8b5cf6'
               }}>
-                ₹11,150
+                {formatCurrency(inventoryData.totalValue)}
               </p>
             </div>
             <div style={{
               width: '40px',
               height: '40px',
-              backgroundColor: '#fee2e2',
+              backgroundColor: '#f3e8ff',
               borderRadius: '0.5rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <Users size={20} style={{ color: '#ef4444' }} />
+              <Package size={20} style={{ color: '#8b5cf6' }} />
             </div>
           </div>
           <div style={{
             fontSize: '0.75rem',
             color: '#6b7280'
           }}>
-            8.6% avg discount rate
+            {inventoryData.totalItems} items | Purchase: {formatCurrency(inventoryData.purchaseValue)}
+          </div>
+        </div>
+
+        <div style={{
+          backgroundColor: 'white',
+          padding: '1.5rem',
+          borderRadius: '0.5rem',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #e5e7eb'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '1rem'
+          }}>
+            <div>
+              <p style={{
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                color: '#6b7280'
+              }}>
+                Net Profit
+              </p>
+              <p style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: '#3b82f6'
+              }}>
+                {formatCurrency(financialData.profit)}
+              </p>
+            </div>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              backgroundColor: '#dbeafe',
+              borderRadius: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <DollarSign size={20} style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
+          <div style={{
+            fontSize: '0.75rem',
+            color: '#6b7280'
+          }}>
+            {financialData.profitMargin}% margin | Expenses: {formatCurrency(financialData.expenses)}
           </div>
         </div>
       </div>
@@ -1628,13 +1328,18 @@ const ReportsDashboard: React.FC = () => {
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {category.reports.map((report) => (
-                  <div
+                  <button
                     key={report}
+                    onClick={() => generateReport(report)}
                     style={{
                       padding: '0.75rem',
                       backgroundColor: '#f8fafc',
                       border: '1px solid #e2e8f0',
                       borderRadius: '0.375rem',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '0.875rem',
+                      color: '#374151',
                       transition: 'all 0.2s ease'
                     }}
                     onMouseEnter={(e) => {
@@ -1651,222 +1356,15 @@ const ReportsDashboard: React.FC = () => {
                       justifyContent: 'space-between',
                       alignItems: 'center'
                     }}>
-                      <span style={{
-                        fontSize: '0.875rem',
-                        color: '#374151',
-                        fontWeight: ['GSTR1 Report', 'Supplier-wise Medicine Report', 'Sales Report with Discounts'].includes(report) ? '600' : '400'
-                      }}>
-                        {report}
-                        {report === 'GSTR1 Report' && (
-                          <span style={{
-                            marginLeft: '0.5rem',
-                            fontSize: '0.75rem',
-                            backgroundColor: '#10b981',
-                            color: 'white',
-                            padding: '0.125rem 0.375rem',
-                            borderRadius: '0.25rem'
-                          }}>
-                            GST
-                          </span>
-                        )}
-                        {report === 'Supplier-wise Medicine Report' && (
-                          <span style={{
-                            marginLeft: '0.5rem',
-                            fontSize: '0.75rem',
-                            backgroundColor: '#3b82f6',
-                            color: 'white',
-                            padding: '0.125rem 0.375rem',
-                            borderRadius: '0.25rem'
-                          }}>
-                            NEW
-                          </span>
-                        )}
-                        {report === 'Sales Report with Discounts' && (
-                          <span style={{
-                            marginLeft: '0.5rem',
-                            fontSize: '0.75rem',
-                            backgroundColor: '#f59e0b',
-                            color: 'white',
-                            padding: '0.125rem 0.375rem',
-                            borderRadius: '0.25rem'
-                          }}>
-                            ENHANCED
-                          </span>
-                        )}
-                      </span>
-                      <div style={{ display: 'flex', gap: '0.25rem' }}>
-                        <button
-                          onClick={() => viewReport(report)}
-                          style={{
-                            padding: '0.25rem',
-                            backgroundColor: 'transparent',
-                            border: 'none',
-                            borderRadius: '0.25rem',
-                            cursor: 'pointer',
-                            color: '#3b82f6'
-                          }}
-                          title="View Report"
-                        >
-                          <Eye size={14} />
-                        </button>
-                        <button
-                          onClick={() => downloadReport(report)}
-                          style={{
-                            padding: '0.25rem',
-                            backgroundColor: 'transparent',
-                            border: 'none',
-                            borderRadius: '0.25rem',
-                            cursor: 'pointer',
-                            color: '#6b7280'
-                          }}
-                          title="Download Report"
-                        >
-                          <Download size={14} />
-                        </button>
-                      </div>
+                      <span>{report}</span>
+                      <Eye size={14} style={{ color: '#6b7280' }} />
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
           );
         })}
-      </div>
-
-      {/* Quick Analytics */}
-      <div style={{
-        backgroundColor: 'white',
-        padding: '1.5rem',
-        borderRadius: '0.5rem',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        border: '1px solid #e5e7eb'
-      }}>
-        <h3 style={{
-          fontSize: '1.25rem',
-          fontWeight: '600',
-          marginBottom: '1rem',
-          color: '#374151'
-        }}>
-          Quick Analytics
-        </h3>
-        
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem'
-        }}>
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#f8fafc',
-            borderRadius: '0.375rem',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{
-              fontSize: '0.875rem',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              Top Selling Medicine
-            </div>
-            <div style={{
-              fontSize: '1rem',
-              fontWeight: '600',
-              color: '#111827'
-            }}>
-              Paracetamol 500mg
-            </div>
-            <div style={{
-              fontSize: '0.75rem',
-              color: '#6b7280'
-            }}>
-              1,250 units sold
-            </div>
-          </div>
-          
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#f8fafc',
-            borderRadius: '0.375rem',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{
-              fontSize: '0.875rem',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              Senior Citizen Discounts
-            </div>
-            <div style={{
-              fontSize: '1rem',
-              fontWeight: '600',
-              color: '#111827'
-            }}>
-              ₹10,150 (91%)
-            </div>
-            <div style={{
-              fontSize: '0.75rem',
-              color: '#6b7280'
-            }}>
-              of total discounts
-            </div>
-          </div>
-          
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#f8fafc',
-            borderRadius: '0.375rem',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{
-              fontSize: '0.875rem',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              Top Supplier
-            </div>
-            <div style={{
-              fontSize: '1rem',
-              fontWeight: '600',
-              color: '#111827'
-            }}>
-              MediCorp Pharmaceuticals
-            </div>
-            <div style={{
-              fontSize: '0.75rem',
-              color: '#6b7280'
-            }}>
-              ₹6,500 total value
-            </div>
-          </div>
-          
-          <div style={{
-            padding: '1rem',
-            backgroundColor: '#f8fafc',
-            borderRadius: '0.375rem',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{
-              fontSize: '0.875rem',
-              color: '#6b7280',
-              marginBottom: '0.5rem'
-            }}>
-              Payment Method
-            </div>
-            <div style={{
-              fontSize: '1rem',
-              fontWeight: '600',
-              color: '#111827'
-            }}>
-              UPI (45%)
-            </div>
-            <div style={{
-              fontSize: '0.75rem',
-              color: '#6b7280'
-            }}>
-              Most preferred
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
