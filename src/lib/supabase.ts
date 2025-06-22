@@ -64,16 +64,6 @@ const testConnection = async () => {
       console.log('- Can access patients table');
     }
 
-    // Test 3: Check if tables exist
-    console.log('🔍 Checking table structure...');
-    const { data: tableInfo, error: tableError } = await supabase
-      .rpc('check_table_exists', { table_name: 'patients' })
-      .single();
-    
-    if (tableError && tableError.code !== '42883') { // Function doesn't exist is OK
-      console.error('❌ Table check failed:', tableError);
-    }
-
   } catch (error) {
     console.error('❌ Connection test failed:', error);
   }
